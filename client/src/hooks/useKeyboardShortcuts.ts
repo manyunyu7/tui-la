@@ -59,6 +59,8 @@ export const MAP_SHORTCUTS = {
   ZOOM_OUT: { key: '-', description: 'Zoom out' },
   ESCAPE: { key: 'Escape', description: 'Close modal/panel' },
   SEARCH: { key: '/', description: 'Focus search' },
+  UNDO: { key: 'z', ctrl: true, description: 'Undo last stroke' },
+  REDO: { key: 'y', ctrl: true, description: 'Redo last stroke' },
 } as const
 
 // Shortcut display helper

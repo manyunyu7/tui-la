@@ -42,6 +42,10 @@ interface DrawingCanvasProps {
 export interface DrawingCanvasRef {
   clearStrokes: () => void
   getStrokes: () => GeoStroke[]
+  undo: () => GeoStroke | null
+  redo: () => GeoStroke | null
+  canUndo: () => boolean
+  canRedo: () => boolean
 }
 
 // Eraser uses a special color that blends with map tiles
@@ -62,6 +66,7 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
   const map = useMap()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [localStrokes, setLocalStrokes] = useState<GeoStroke[]>([])
+  const [undoStack, setUndoStack] = useState<GeoStroke[]>([])
   const [currentStroke, setCurrentStroke] = useState<{ screen: ScreenStroke; geo: GeoStroke } | null>(null)
   const isDrawingRef = useRef(false)
 
@@ -69,10 +74,27 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
   useImperativeHandle(ref, () => ({
     clearStrokes: () => {
       setLocalStrokes([])
+      setUndoStack([])
       setCurrentStroke(null)
     },
     getStrokes: () => localStrokes,
-  }))
+    undo: () => {
+      if (localStrokes.length === 0) return null
+      const lastStroke = localStrokes[localStrokes.length - 1]
+      setLocalStrokes(prev => prev.slice(0, -1))
+      setUndoStack(prev => [...prev, lastStroke])
+      return lastStroke
+    },
+    redo: () => {
+      if (undoStack.length === 0) return null
+      const strokeToRedo = undoStack[undoStack.length - 1]
+      setUndoStack(prev => prev.slice(0, -1))
+      setLocalStrokes(prev => [...prev, strokeToRedo])
+      return strokeToRedo
+    },
+    canUndo: () => localStrokes.length > 0,
+    canRedo: () => undoStack.length > 0,
+  }), [localStrokes, undoStack])
 
   // Generate unique stroke ID
   const generateStrokeId = () => `stroke-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -265,6 +287,7 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
     // Save stroke
     if (currentStroke.geo.pathData.length >= 2) {
       setLocalStrokes(prev => [...prev, currentStroke.geo])
+      setUndoStack([]) // Clear redo stack when new stroke is added
       onStrokeEnd?.(currentStroke.screen.id, currentStroke.geo)
     }
 
@@ -323,6 +346,10 @@ interface DrawingToolbarProps {
   onToolChange: (tool: DrawingTool) => void
   onClear: () => void
   onClose: () => void
+  onUndo?: () => void
+  onRedo?: () => void
+  canUndo?: boolean
+  canRedo?: boolean
   isSaving?: boolean
 }
 
@@ -349,6 +376,10 @@ export function DrawingToolbar({
   onToolChange,
   onClear,
   onClose,
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
   isSaving = false,
 }: DrawingToolbarProps) {
   if (!isVisible) return null
@@ -433,6 +464,45 @@ export function DrawingToolbar({
           ))}
         </div>
       </div>
+
+      {/* Undo/Redo */}
+      {(onUndo || onRedo) && (
+        <div>
+          <p className="text-xs text-neutral-500 mb-2">History</p>
+          <div className="flex gap-2">
+            <button
+              onClick={onUndo}
+              disabled={!canUndo || isSaving}
+              className={cn(
+                'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
+                canUndo && !isSaving
+                  ? 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                  : 'bg-neutral-50 text-neutral-300 cursor-not-allowed'
+              )}
+              title="Undo (Ctrl+Z)"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+            </button>
+            <button
+              onClick={onRedo}
+              disabled={!canRedo || isSaving}
+              className={cn(
+                'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
+                canRedo && !isSaving
+                  ? 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                  : 'bg-neutral-50 text-neutral-300 cursor-not-allowed'
+              )}
+              title="Redo (Ctrl+Y)"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex gap-2 pt-2 border-t border-neutral-100">

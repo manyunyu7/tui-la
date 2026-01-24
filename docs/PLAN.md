@@ -207,7 +207,7 @@
 ### 5.2 UX Improvements
 - [x] Onboarding flow for new users
 - [x] Keyboard shortcuts
-- [ ] Undo/redo for drawings
+- [x] Undo/redo for drawings
 - [ ] Bulk pin management
 - [x] Map zoom to fit all pins
 - [x] Better loading states

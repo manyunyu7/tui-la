@@ -143,6 +143,8 @@ export function Map() {
   const [partnerStrokes, setPartnerStrokes] = useState<Stroke[]>([])
   const [savedDrawings, setSavedDrawings] = useState<GeoStroke[]>([])
   const [isSavingDrawings, setIsSavingDrawings] = useState(false)
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
   const drawingCanvasRef = useRef<DrawingCanvasRef>(null)
 
   // Filter state
@@ -312,11 +314,15 @@ export function Map() {
   const handleStrokeEnd = useCallback((strokeId: string, geoStroke: GeoStroke) => {
     emitStrokeEnd(strokeId)
     // Note: We don't save to DB here - we batch save when exiting drawing mode
-  }, [emitStrokeEnd])
+    // Update undo/redo state after stroke completes
+    setTimeout(updateUndoRedoState, 0)
+  }, [emitStrokeEnd, updateUndoRedoState])
 
   const handleClearDrawing = useCallback(async () => {
     setPartnerStrokes([])
     drawingCanvasRef.current?.clearStrokes()
+    setCanUndo(false)
+    setCanRedo(false)
 
     // Also clear saved drawings from database
     if (mapId && savedDrawings.length > 0) {
@@ -328,6 +334,21 @@ export function Map() {
       }
     }
   }, [mapId, savedDrawings.length, toast])
+
+  const updateUndoRedoState = useCallback(() => {
+    setCanUndo(drawingCanvasRef.current?.canUndo() ?? false)
+    setCanRedo(drawingCanvasRef.current?.canRedo() ?? false)
+  }, [])
+
+  const handleUndo = useCallback(() => {
+    drawingCanvasRef.current?.undo()
+    updateUndoRedoState()
+  }, [updateUndoRedoState])
+
+  const handleRedo = useCallback(() => {
+    drawingCanvasRef.current?.redo()
+    updateUndoRedoState()
+  }, [updateUndoRedoState])
 
   const handleCreatePin = async (formData: PinFormData) => {
     if (!clickPosition) return
@@ -429,6 +450,18 @@ export function Map() {
           else if (isDrawingMode) setIsDrawingMode(false)
         },
       },
+      {
+        ...MAP_SHORTCUTS.UNDO,
+        handler: () => {
+          if (isDrawingMode && canUndo) handleUndo()
+        },
+      },
+      {
+        ...MAP_SHORTCUTS.REDO,
+        handler: () => {
+          if (isDrawingMode && canRedo) handleRedo()
+        },
+      },
     ],
     enabled: !isLoadingMap,
   })
@@ -522,6 +555,7 @@ export function Map() {
           <DrawingCanvas
             ref={drawingCanvasRef}
             isDrawing={isDrawingMode}
+            tool={drawingTool}
             strokeColor={strokeColor}
             strokeWidth={strokeWidth}
             savedDrawings={savedDrawings}
@@ -544,6 +578,10 @@ export function Map() {
           onToolChange={setDrawingTool}
           onClear={handleClearDrawing}
           onClose={handleDrawingToggle}
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          canUndo={canUndo}
+          canRedo={canRedo}
           isSaving={isSavingDrawings}
         />
 
