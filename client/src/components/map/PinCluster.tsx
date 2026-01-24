@@ -10,6 +10,7 @@ interface PinClusterGroupProps {
   onPinDelete?: (pin: Pin) => void
   onPinMove?: (pin: Pin, lat: number, lng: number) => void
   enableClustering?: boolean
+  selectedPins?: string[]
 }
 
 // Create a custom cluster icon
@@ -67,6 +68,7 @@ export function PinClusterGroup({
   onPinDelete,
   onPinMove,
   enableClustering = true,
+  selectedPins,
 }: PinClusterGroupProps) {
   if (!enableClustering || pins.length < 10) {
     // Don't cluster for small numbers of pins
@@ -80,6 +82,7 @@ export function PinClusterGroup({
             onEdit={onPinEdit}
             onDelete={onPinDelete}
             onMove={onPinMove}
+            isSelected={selectedPins?.includes(pin.id)}
           />
         ))}
       </>
@@ -105,6 +108,7 @@ export function PinClusterGroup({
           onEdit={onPinEdit}
           onDelete={onPinDelete}
           onMove={onPinMove}
+          isSelected={selectedPins?.includes(pin.id)}
         />
       ))}
     </MarkerClusterGroup>

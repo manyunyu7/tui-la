@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useMapExport } from '@/hooks/useMapExport'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter, type GeoStroke, type DrawingCanvasRef, type DrawingTool, Timeline, TimelineButton, FlyTo, FitBounds, PinClusterGroup } from '@/components/map'
+import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter, type GeoStroke, type DrawingCanvasRef, type DrawingTool, Timeline, TimelineButton, FlyTo, FitBounds, PinClusterGroup, BulkPinManager, BulkSelectButton } from '@/components/map'
 import { Button, Modal, Onboarding, useOnboarding } from '@/components/ui'
 import { NoPinsEmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
@@ -160,6 +160,10 @@ export function Map() {
   const [flyToTarget, setFlyToTarget] = useState<{ lat: number; lng: number } | null>(null)
   const [fitBoundsTrigger, setFitBoundsTrigger] = useState(0)
 
+  // Bulk selection state
+  const [isBulkSelectMode, setIsBulkSelectMode] = useState(false)
+  const [selectedPins, setSelectedPins] = useState<string[]>([])
+
   // Export functionality
   const { isExporting, downloadImage } = useMapExport({
     mapContainerId: 'map-container',
@@ -177,6 +181,8 @@ export function Map() {
     addPinLocally,
     removePinLocally,
     movePinLocally,
+    bulkDeletePins,
+    bulkUpdatePinType,
   } = usePins({ mapId: mapId! })
 
   const accessToken = localStorage.getItem('accessToken')
@@ -436,6 +442,45 @@ export function Map() {
     }
   }, [movePin, emitPinMove, toast])
 
+  // Bulk selection handlers
+  const handlePinClickInBulkMode = useCallback((pin: Pin) => {
+    setSelectedPins(prev => {
+      if (prev.includes(pin.id)) {
+        return prev.filter(id => id !== pin.id)
+      }
+      return [...prev, pin.id]
+    })
+  }, [])
+
+  const handleBulkDelete = useCallback(async (pinIds: string[]) => {
+    try {
+      await bulkDeletePins(pinIds)
+      pinIds.forEach(id => emitPinDelete(id))
+      toast.success(`Deleted ${pinIds.length} pins`)
+    } catch {
+      toast.error('Failed to delete pins')
+    }
+  }, [bulkDeletePins, emitPinDelete, toast])
+
+  const handleBulkTypeChange = useCallback(async (pinIds: string[], newType: string) => {
+    try {
+      await bulkUpdatePinType(pinIds, newType)
+      toast.success(`Updated ${pinIds.length} pins`)
+    } catch {
+      toast.error('Failed to update pins')
+    }
+  }, [bulkUpdatePinType, toast])
+
+  const handleBulkSelectToggle = useCallback(() => {
+    setIsBulkSelectMode(prev => {
+      if (prev) {
+        // Exiting bulk mode, clear selection
+        setSelectedPins([])
+      }
+      return !prev
+    })
+  }, [])
+
   // Keyboard shortcuts
   useKeyboardShortcuts({
     shortcuts: [
@@ -556,10 +601,11 @@ export function Map() {
 
           <PinClusterGroup
             pins={applyPinFilter(pins, pinFilter, user?.id)}
-            onPinClick={handleEditPin}
+            onPinClick={isBulkSelectMode ? handlePinClickInBulkMode : handleEditPin}
             onPinEdit={handleEditPin}
             onPinDelete={handleDeletePin}
             onPinMove={handlePinMove}
+            selectedPins={isBulkSelectMode ? selectedPins : undefined}
           />
 
           {partnerCursor && (
@@ -618,6 +664,13 @@ export function Map() {
               pinFilter.createdBy !== 'all'
             }
           />
+          {pins.length > 0 && (
+            <BulkSelectButton
+              onClick={handleBulkSelectToggle}
+              isActive={isBulkSelectMode}
+              selectedCount={selectedPins.length}
+            />
+          )}
         </div>
 
         {/* Pin filters panel */}
@@ -635,6 +688,17 @@ export function Map() {
           onClose={() => setIsTimelineOpen(false)}
           pins={pins}
           onPinSelect={handleTimelinePinSelect}
+        />
+
+        {/* Bulk pin management panel */}
+        <BulkPinManager
+          pins={pins}
+          selectedPins={selectedPins}
+          onSelectionChange={setSelectedPins}
+          onBulkDelete={handleBulkDelete}
+          onBulkTypeChange={handleBulkTypeChange}
+          onClose={handleBulkSelectToggle}
+          isOpen={isBulkSelectMode}
         />
 
         {/* Empty state overlay */}

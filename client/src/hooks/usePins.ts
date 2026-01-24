@@ -114,6 +114,43 @@ export function usePins({ mapId }: UsePinsOptions) {
     setPins((prev) => prev.filter((p) => p.id !== pinId))
   }, [])
 
+  const bulkDeletePins = useCallback(async (pinIds: string[]) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      // Delete pins in parallel
+      await Promise.all(pinIds.map(id => api.delete(`/pins/${id}`)))
+      setPins((prev) => prev.filter((p) => !pinIds.includes(p.id)))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete pins')
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  const bulkUpdatePinType = useCallback(async (pinIds: string[], pinType: string) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      // Update pins in parallel
+      const updates = await Promise.all(
+        pinIds.map(id => api.put<Pin>(`/pins/${id}`, { pinType }))
+      )
+      setPins((prev) =>
+        prev.map((p) => {
+          const updated = updates.find((u) => u.id === p.id)
+          return updated || p
+        })
+      )
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update pins')
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
   return {
     pins,
     isLoading,
@@ -126,5 +163,7 @@ export function usePins({ mapId }: UsePinsOptions) {
     movePinLocally,
     addPinLocally,
     removePinLocally,
+    bulkDeletePins,
+    bulkUpdatePinType,
   }
 }

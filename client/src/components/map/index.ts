@@ -8,3 +8,4 @@ export { DrawingCanvas, DrawingToolbar, type GeoStroke, type DrawingCanvasRef, t
 export { PlaceSearch } from './PlaceSearch'
 export { PinFilters, FilterButton, applyPinFilter, type PinFilter } from './PinFilters'
 export { Timeline, TimelineButton } from './Timeline'
+export { BulkPinManager, BulkSelectButton } from './BulkPinManager'

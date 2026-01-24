@@ -10,10 +10,11 @@ interface PinMarkerProps {
   onDelete?: (pin: Pin) => void
   onMove?: (pin: Pin, lat: number, lng: number) => void
   draggable?: boolean
+  isSelected?: boolean
 }
 
-export function PinMarker({ pin, onClick, onEdit, onDelete, onMove, draggable = true }: PinMarkerProps) {
-  const icon = createPinIcon(pin.icon, pin.color)
+export function PinMarker({ pin, onClick, onEdit, onDelete, onMove, draggable = true, isSelected = false }: PinMarkerProps) {
+  const icon = createPinIcon(pin.icon, pin.color, isSelected)
 
   return (
     <Marker
@@ -88,7 +89,11 @@ export function PinMarker({ pin, onClick, onEdit, onDelete, onMove, draggable = 
   )
 }
 
-function createPinIcon(emoji: string, color: string): L.DivIcon {
+function createPinIcon(emoji: string, color: string, isSelected: boolean = false): L.DivIcon {
+  const selectedStyle = isSelected
+    ? 'box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5), 0 4px 8px rgba(0,0,0,0.2); transform: rotate(-45deg) scale(1.15);'
+    : 'box-shadow: 0 4px 8px rgba(0,0,0,0.2); transform: rotate(-45deg);'
+
   return L.divIcon({
     className: 'custom-pin-marker',
     html: `
@@ -97,18 +102,35 @@ function createPinIcon(emoji: string, color: string): L.DivIcon {
         height: 40px;
         background-color: ${color};
         border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
+        ${selectedStyle}
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        border: 3px solid white;
+        border: 3px solid ${isSelected ? '#3B82F6' : 'white'};
+        transition: transform 0.2s, border-color 0.2s;
       ">
         <span style="
           transform: rotate(45deg);
           font-size: 18px;
         ">${emoji}</span>
       </div>
+      ${isSelected ? `
+        <div style="
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          width: 20px;
+          height: 20px;
+          background: #3B82F6;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 12px;
+          border: 2px solid white;
+        ">✓</div>
+      ` : ''}
     `,
     iconSize: [40, 40],
     iconAnchor: [20, 40],

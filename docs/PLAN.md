@@ -208,7 +208,7 @@
 - [x] Onboarding flow for new users
 - [x] Keyboard shortcuts
 - [x] Undo/redo for drawings
-- [ ] Bulk pin management
+- [x] Bulk pin management
 - [x] Map zoom to fit all pins
 - [x] Better loading states
 - [x] Error boundaries
