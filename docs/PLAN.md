@@ -136,7 +136,7 @@
 - [x] Cursor position sharing
 - [x] "Partner is viewing" indicator
 - [x] Partner avatar on map
-- [ ] Debounced cursor updates
+- [x] Debounced cursor updates
 
 ### 3.4 Drawing System
 - [x] Canvas overlay on map
@@ -197,7 +197,7 @@
 ## Phase 5: Polish & Optimization
 
 ### 5.1 Performance
-- [ ] Image lazy loading
+- [x] Image lazy loading
 - [x] Pin clustering for many markers
 - [ ] Drawing path optimization
 - [ ] Virtualized pin list
@@ -206,7 +206,7 @@
 
 ### 5.2 UX Improvements
 - [ ] Onboarding flow for new users
-- [ ] Keyboard shortcuts
+- [x] Keyboard shortcuts
 - [ ] Undo/redo for drawings
 - [ ] Bulk pin management
 - [x] Map zoom to fit all pins

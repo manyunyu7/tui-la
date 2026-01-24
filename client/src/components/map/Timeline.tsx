@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { format, parseISO, isValid } from 'date-fns'
 import { cn } from '@/utils/cn'
 import { PIN_TYPES } from '@/config/constants'
+import { LazyImage } from '@/components/ui'
 import type { Pin } from '@/types'
 
 interface TimelineProps {
@@ -172,10 +173,10 @@ function TimelineItem({ pin, onClick }: TimelineItemProps) {
           style={!firstMedia ? { backgroundColor: pin.color + '20' } : undefined}
         >
           {firstMedia ? (
-            <img
+            <LazyImage
               src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${firstMedia.thumbnailPath || firstMedia.filePath}`}
               alt=""
-              className="w-full h-full object-cover"
+              className="w-full h-full"
             />
           ) : (
             <span className="text-xl">{pin.icon}</span>

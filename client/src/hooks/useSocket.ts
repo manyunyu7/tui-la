@@ -76,8 +76,40 @@ export function useSocket({
     }
   }, [accessToken, mapId, onPinCreated, onPinUpdated, onPinDeleted, onPinMoved, onPartnerCursor, onPartnerJoined, onPartnerLeft, onStrokeStarted, onStrokeUpdated, onStrokeEnded])
 
+  // Debounced cursor move - throttle to max 10 updates per second
+  const lastCursorEmitRef = useRef<number>(0)
+  const pendingCursorRef = useRef<{ lat: number; lng: number } | null>(null)
+  const cursorTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   const emitCursorMove = useCallback((lat: number, lng: number) => {
-    socketRef.current?.emit('cursor_move', { mapId, lat, lng })
+    const now = Date.now()
+    const timeSinceLastEmit = now - lastCursorEmitRef.current
+    const THROTTLE_MS = 100 // Max 10 updates per second
+
+    if (timeSinceLastEmit >= THROTTLE_MS) {
+      // Enough time has passed, emit immediately
+      socketRef.current?.emit('cursor_move', { mapId, lat, lng })
+      lastCursorEmitRef.current = now
+      pendingCursorRef.current = null
+    } else {
+      // Store pending cursor and schedule emit
+      pendingCursorRef.current = { lat, lng }
+
+      if (!cursorTimeoutRef.current) {
+        cursorTimeoutRef.current = setTimeout(() => {
+          if (pendingCursorRef.current) {
+            socketRef.current?.emit('cursor_move', {
+              mapId,
+              lat: pendingCursorRef.current.lat,
+              lng: pendingCursorRef.current.lng
+            })
+            lastCursorEmitRef.current = Date.now()
+            pendingCursorRef.current = null
+          }
+          cursorTimeoutRef.current = null
+        }, THROTTLE_MS - timeSinceLastEmit)
+      }
+    }
   }, [mapId])
 
   const emitPinCreate = useCallback((pin: Pin) => {

@@ -7,6 +7,7 @@ import { NoPinsEmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { usePins } from '@/hooks/usePins'
 import { useSocket } from '@/hooks/useSocket'
+import { useKeyboardShortcuts, MAP_SHORTCUTS } from '@/hooks/useKeyboardShortcuts'
 import { api } from '@/services/api'
 import type { Pin, MapData } from '@/types'
 import type { PinFormData } from '@/components/map/PinEditor'
@@ -395,6 +396,40 @@ export function Map() {
       toast.error('Failed to move pin')
     }
   }, [movePin, emitPinMove, toast])
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    shortcuts: [
+      {
+        ...MAP_SHORTCUTS.TOGGLE_DRAWING,
+        handler: handleDrawingToggle,
+      },
+      {
+        ...MAP_SHORTCUTS.TOGGLE_TIMELINE,
+        handler: () => setIsTimelineOpen(prev => !prev),
+      },
+      {
+        ...MAP_SHORTCUTS.TOGGLE_FILTERS,
+        handler: () => setIsFiltersOpen(prev => !prev),
+      },
+      {
+        ...MAP_SHORTCUTS.FIT_BOUNDS,
+        handler: () => pins.length > 0 && setFitBoundsTrigger(t => t + 1),
+      },
+      {
+        ...MAP_SHORTCUTS.ESCAPE,
+        handler: () => {
+          if (editingPin) setEditingPin(null)
+          else if (clickPosition) setClickPosition(null)
+          else if (deletingPin) setDeletingPin(null)
+          else if (isTimelineOpen) setIsTimelineOpen(false)
+          else if (isFiltersOpen) setIsFiltersOpen(false)
+          else if (isDrawingMode) setIsDrawingMode(false)
+        },
+      },
+    ],
+    enabled: !isLoadingMap,
+  })
 
   if (isLoadingMap) {
     return (
