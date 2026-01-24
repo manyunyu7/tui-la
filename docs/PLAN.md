@@ -12,57 +12,57 @@
 
 ### 1.1 Project Setup
 - [x] Initialize project structure
-- [ ] Setup client (React + Vite + Tailwind)
-- [ ] Setup server (Node.js + Express + TypeScript)
-- [ ] Configure Docker Compose (PostgreSQL + Redis)
-- [ ] Setup environment configuration
-- [ ] Configure ESLint + Prettier
+- [x] Setup client (React + Vite + Tailwind)
+- [x] Setup server (Node.js + Express + TypeScript)
+- [x] Configure Docker Compose (PostgreSQL + Redis)
+- [x] Setup environment configuration
+- [x] Configure ESLint + Prettier
 
 ### 1.2 Database Setup
-- [ ] Install and configure PostgreSQL with PostGIS
-- [ ] Create migration system (node-pg-migrate)
-- [ ] Create initial schema migrations
-  - [ ] users table
-  - [ ] couples table
-  - [ ] maps table
-  - [ ] pins table
-  - [ ] pin_media table
-  - [ ] drawings table
+- [x] Install and configure PostgreSQL with PostGIS
+- [x] Create migration system (custom TypeScript runner)
+- [x] Create initial schema migrations
+  - [x] users table
+  - [x] couples table
+  - [x] maps table
+  - [x] pins table
+  - [x] pin_media table
+  - [x] drawings table
 - [ ] Create seed data for development
 
 ### 1.3 Authentication System
-- [ ] User registration endpoint
-- [ ] User login endpoint
-- [ ] JWT token generation (access + refresh)
-- [ ] Token refresh endpoint
-- [ ] Logout endpoint
-- [ ] Password hashing with bcrypt
-- [ ] Auth middleware for protected routes
-- [ ] Rate limiting on auth endpoints
+- [x] User registration endpoint
+- [x] User login endpoint
+- [x] JWT token generation (access + refresh)
+- [x] Token refresh endpoint
+- [x] Logout endpoint
+- [x] Password hashing with bcrypt
+- [x] Auth middleware for protected routes
+- [x] Rate limiting on auth endpoints
 
 ### 1.4 Couple Pairing System
-- [ ] Generate unique invite code on registration
-- [ ] Join couple via invite code endpoint
-- [ ] Couple status check endpoint
-- [ ] Unpair couple endpoint (with confirmation)
+- [x] Generate unique invite code on registration
+- [x] Join couple via invite code endpoint
+- [x] Couple status check endpoint
+- [x] Unpair couple endpoint (with confirmation)
 
 ### 1.5 Basic UI Components (Duolingo-style)
-- [ ] Design system setup (Tailwind config)
-- [ ] Button component (chunky, 3D effect)
-- [ ] Input component (rounded, friendly)
-- [ ] Card component
-- [ ] Modal component
-- [ ] Toast/notification component
-- [ ] Loading spinner (heart animation)
-- [ ] Avatar component
-- [ ] Empty state component
+- [x] Design system setup (Tailwind config)
+- [x] Button component (chunky, 3D effect)
+- [x] Input component (rounded, friendly)
+- [x] Card component
+- [x] Modal component
+- [x] Toast/notification component
+- [x] Loading spinner (heart animation)
+- [x] Avatar component
+- [x] Empty state component
 
 ### 1.6 Auth Pages
-- [ ] Landing page
-- [ ] Registration page
-- [ ] Login page
-- [ ] Pairing page (enter/share invite code)
-- [ ] Auth context and hooks
+- [x] Landing page
+- [x] Registration page
+- [x] Login page
+- [x] Pairing page (enter/share invite code)
+- [x] Auth context and hooks
 
 ---
 

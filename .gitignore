@@ -61,10 +61,10 @@ docker/ssl/
 secrets/
 credentials/
 
-# Backups
-*.sql
+# Backups (but include migrations)
 *.dump
 backups/
+!server/migrations/*.sql
 
 # Temporary
 tmp/
