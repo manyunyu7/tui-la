@@ -8,17 +8,25 @@ interface PinMarkerProps {
   onClick?: (pin: Pin) => void
   onEdit?: (pin: Pin) => void
   onDelete?: (pin: Pin) => void
+  onMove?: (pin: Pin, lat: number, lng: number) => void
+  draggable?: boolean
 }
 
-export function PinMarker({ pin, onClick, onEdit, onDelete }: PinMarkerProps) {
+export function PinMarker({ pin, onClick, onEdit, onDelete, onMove, draggable = true }: PinMarkerProps) {
   const icon = createPinIcon(pin.icon, pin.color)
 
   return (
     <Marker
       position={[pin.lat, pin.lng]}
       icon={icon}
+      draggable={draggable}
       eventHandlers={{
         click: () => onClick?.(pin),
+        dragend: (e) => {
+          const marker = e.target
+          const position = marker.getLatLng()
+          onMove?.(pin, position.lat, position.lng)
+        },
       }}
     >
       <Popup className="pin-popup">

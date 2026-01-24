@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter, type GeoStroke, type DrawingCanvasRef, Timeline, TimelineButton, FlyTo, PinClusterGroup } from '@/components/map'
+import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter, type GeoStroke, type DrawingCanvasRef, Timeline, TimelineButton, FlyTo, FitBounds, PinClusterGroup } from '@/components/map'
 import { Button, Modal } from '@/components/ui'
 import { NoPinsEmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
@@ -152,6 +152,7 @@ export function Map() {
   // Timeline state
   const [isTimelineOpen, setIsTimelineOpen] = useState(false)
   const [flyToTarget, setFlyToTarget] = useState<{ lat: number; lng: number } | null>(null)
+  const [fitBoundsTrigger, setFitBoundsTrigger] = useState(0)
 
   const {
     pins,
@@ -160,6 +161,7 @@ export function Map() {
     createPin,
     updatePin,
     deletePin,
+    movePin,
     addPinLocally,
     removePinLocally,
     movePinLocally,
@@ -173,6 +175,7 @@ export function Map() {
     emitPinCreate,
     emitPinUpdate,
     emitPinDelete,
+    emitPinMove,
     emitStrokeStart,
     emitStrokeUpdate,
     emitStrokeEnd,
@@ -383,6 +386,16 @@ export function Map() {
     emitCursorMove(lat, lng)
   }, [emitCursorMove])
 
+  const handlePinMove = useCallback(async (pin: Pin, lat: number, lng: number) => {
+    try {
+      await movePin(pin.id, lat, lng)
+      emitPinMove(pin.id, lat, lng)
+      toast.success('Pin moved')
+    } catch {
+      toast.error('Failed to move pin')
+    }
+  }, [movePin, emitPinMove, toast])
+
   if (isLoadingMap) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-neutral-50">
@@ -433,12 +446,18 @@ export function Map() {
           <MapControls
             onDrawingToggle={handleDrawingToggle}
             isDrawing={isDrawingMode}
+            onFitBounds={() => setFitBoundsTrigger(t => t + 1)}
+            hasPins={pins.length > 0}
           />
           <LocateControl />
           <FlyTo
             lat={flyToTarget?.lat ?? null}
             lng={flyToTarget?.lng ?? null}
             onComplete={() => setFlyToTarget(null)}
+          />
+          <FitBounds
+            bounds={pins.map(p => ({ lat: p.lat, lng: p.lng }))}
+            trigger={fitBoundsTrigger}
           />
           <PlaceSearch
             className="absolute left-4 top-4 z-[1000] w-72"
@@ -452,6 +471,7 @@ export function Map() {
             onPinClick={handleEditPin}
             onPinEdit={handleEditPin}
             onPinDelete={handleDeletePin}
+            onPinMove={handlePinMove}
           />
 
           {partnerCursor && (

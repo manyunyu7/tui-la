@@ -135,6 +135,35 @@ export function FlyTo({ lat, lng, zoom = 16, onComplete }: FlyToProps) {
   return null
 }
 
+interface FitBoundsProps {
+  bounds: Array<{ lat: number; lng: number }> | null
+  trigger: number
+  padding?: [number, number]
+}
+
+export function FitBounds({ bounds, trigger, padding = [50, 50] }: FitBoundsProps) {
+  const map = useMap()
+  const lastTriggerRef = useRef<number>(0)
+
+  useEffect(() => {
+    if (!bounds || bounds.length === 0) return
+    if (trigger === lastTriggerRef.current) return
+
+    lastTriggerRef.current = trigger
+
+    const latLngs = bounds.map(b => [b.lat, b.lng] as [number, number])
+    const leafletBounds = L.latLngBounds(latLngs)
+
+    map.flyToBounds(leafletBounds, {
+      padding,
+      duration: 1,
+      maxZoom: 16,
+    })
+  }, [bounds, trigger, padding, map])
+
+  return null
+}
+
 interface LocateControlProps {
   onLocate?: (lat: number, lng: number) => void
 }

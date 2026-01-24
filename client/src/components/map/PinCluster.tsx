@@ -8,6 +8,7 @@ interface PinClusterGroupProps {
   onPinClick?: (pin: Pin) => void
   onPinEdit?: (pin: Pin) => void
   onPinDelete?: (pin: Pin) => void
+  onPinMove?: (pin: Pin, lat: number, lng: number) => void
   enableClustering?: boolean
 }
 
@@ -64,6 +65,7 @@ export function PinClusterGroup({
   onPinClick,
   onPinEdit,
   onPinDelete,
+  onPinMove,
   enableClustering = true,
 }: PinClusterGroupProps) {
   if (!enableClustering || pins.length < 10) {
@@ -77,6 +79,7 @@ export function PinClusterGroup({
             onClick={onPinClick}
             onEdit={onPinEdit}
             onDelete={onPinDelete}
+            onMove={onPinMove}
           />
         ))}
       </>
@@ -101,6 +104,7 @@ export function PinClusterGroup({
           onClick={onPinClick}
           onEdit={onPinEdit}
           onDelete={onPinDelete}
+          onMove={onPinMove}
         />
       ))}
     </MarkerClusterGroup>

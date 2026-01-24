@@ -1,4 +1,4 @@
-export { MapView, MapController, LocateControl, FlyTo } from './MapContainer'
+export { MapView, MapController, LocateControl, FlyTo, FitBounds } from './MapContainer'
 export { MapControls } from './MapControls'
 export { PinMarker, PartnerCursor } from './PinMarker'
 export { PinClusterGroup } from './PinCluster'

@@ -5,9 +5,11 @@ interface MapControlsProps {
   onDrawingToggle?: () => void
   isDrawing?: boolean
   className?: string
+  onFitBounds?: () => void
+  hasPins?: boolean
 }
 
-export function MapControls({ onDrawingToggle, isDrawing, className }: MapControlsProps) {
+export function MapControls({ onDrawingToggle, isDrawing, className, onFitBounds, hasPins }: MapControlsProps) {
   const map = useMap()
 
   const handleZoomIn = () => {
@@ -42,6 +44,19 @@ export function MapControls({ onDrawingToggle, isDrawing, className }: MapContro
           </svg>
         </button>
       </div>
+
+      {/* Fit to pins */}
+      {onFitBounds && hasPins && (
+        <button
+          onClick={onFitBounds}
+          className="w-10 h-10 rounded-xl bg-white shadow-lg flex items-center justify-center text-neutral-600 hover:text-primary-500 transition-colors"
+          title="Fit map to all pins"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+        </button>
+      )}
 
       {/* Drawing toggle */}
       {onDrawingToggle && (

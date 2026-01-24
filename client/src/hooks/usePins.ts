@@ -78,6 +78,22 @@ export function usePins({ mapId }: UsePinsOptions) {
     }
   }, [])
 
+  const movePin = useCallback(async (pinId: string, lat: number, lng: number) => {
+    // Optimistic update
+    setPins((prev) =>
+      prev.map((p) => (p.id === pinId ? { ...p, lat, lng } : p))
+    )
+    try {
+      const updatedPin = await api.put<Pin>(`/pins/${pinId}`, { lat, lng })
+      setPins((prev) => prev.map((p) => (p.id === pinId ? updatedPin : p)))
+      return updatedPin
+    } catch (err) {
+      // Revert optimistic update on error
+      fetchPins()
+      throw err
+    }
+  }, [fetchPins])
+
   const movePinLocally = useCallback((pinId: string, lat: number, lng: number) => {
     setPins((prev) =>
       prev.map((p) => (p.id === pinId ? { ...p, lat, lng } : p))
@@ -106,6 +122,7 @@ export function usePins({ mapId }: UsePinsOptions) {
     createPin,
     updatePin,
     deletePin,
+    movePin,
     movePinLocally,
     addPinLocally,
     removePinLocally,

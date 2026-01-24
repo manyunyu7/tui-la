@@ -90,7 +90,7 @@
   - [x] Category/type selector
   - [x] Emoji icon picker
   - [x] Color picker
-- [ ] Drag to reposition pin
+- [x] Drag to reposition pin
 
 ### 2.3 Photo Uploads
 - [x] File upload middleware (multer)
@@ -209,7 +209,7 @@
 - [ ] Keyboard shortcuts
 - [ ] Undo/redo for drawings
 - [ ] Bulk pin management
-- [ ] Map zoom to fit all pins
+- [x] Map zoom to fit all pins
 - [x] Better loading states
 - [x] Error boundaries
 
