@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { Button, Card, CardTitle, Modal, Input, PhotoUploader } from '@/components/ui'
+import { Button, Card, CardTitle, Modal, Input, PhotoUploader, ThemeSelector, ThemeButton } from '@/components/ui'
 import { NoMapsEmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { api } from '@/services/api'
@@ -31,6 +31,7 @@ export function Maps() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingMap, setEditingMap] = useState<MapWithPinCount | null>(null)
   const [deletingMap, setDeletingMap] = useState<MapWithPinCount | null>(null)
+  const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState(false)
 
   useEffect(() => {
     fetchMaps()
@@ -118,12 +119,15 @@ export function Maps() {
             </div>
           </div>
 
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            New Map
-          </Button>
+          <div className="flex items-center gap-2">
+            <ThemeButton onClick={() => setIsThemeSelectorOpen(true)} />
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              New Map
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -159,6 +163,12 @@ export function Maps() {
         isOpen={!!editingMap}
         onClose={() => setEditingMap(null)}
         onSave={handleUpdateMap}
+      />
+
+      {/* Theme Selector */}
+      <ThemeSelector
+        isOpen={isThemeSelectorOpen}
+        onClose={() => setIsThemeSelectorOpen(false)}
       />
 
       {/* Delete Confirmation Modal */}

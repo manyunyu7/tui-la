@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar } from '@/components/map'
+import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch } from '@/components/map'
 import { Button, Modal } from '@/components/ui'
 import { NoPinsEmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
@@ -365,6 +365,12 @@ export function Map() {
             isDrawing={isDrawingMode}
           />
           <LocateControl />
+          <PlaceSearch
+            className="absolute left-4 top-4 z-[1000] w-72"
+            onPlaceSelect={(lat, lng) => {
+              setClickPosition({ lat, lng })
+            }}
+          />
 
           {pins.map((pin) => (
             <PinMarker

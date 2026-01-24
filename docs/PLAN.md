@@ -174,23 +174,23 @@
 - [ ] Partner notification on new pin
 
 ### 4.3 Search & Places
-- [ ] Nominatim integration (free geocoding)
-- [ ] Search places input
-- [ ] Search results dropdown
-- [ ] Navigate to place on map
-- [ ] Quick add pin from search
+- [x] Nominatim integration (free geocoding)
+- [x] Search places input
+- [x] Search results dropdown
+- [x] Navigate to place on map
+- [x] Quick add pin from search
 
 ### 4.4 Theme Customization
-- [ ] Theme context
-- [ ] Theme selector UI
-- [ ] Predefined themes:
-  - [ ] Rose Garden (pink)
-  - [ ] Sunset Love (coral/orange)
-  - [ ] Midnight Romance (purple/navy)
-  - [ ] Cherry Blossom (soft pink)
-  - [ ] Lavender Dreams (purple/lilac)
+- [x] Theme context
+- [x] Theme selector UI
+- [x] Predefined themes:
+  - [x] Rose Garden (pink)
+  - [x] Sunset Love (coral/orange)
+  - [x] Midnight Romance (purple/navy)
+  - [x] Cherry Blossom (soft pink)
+  - [x] Lavender Dreams (purple/lilac)
 - [ ] Custom color picker
-- [ ] Save theme preference
+- [x] Save theme preference
 
 ---
 
