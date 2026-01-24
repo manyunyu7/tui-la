@@ -12,6 +12,7 @@ import coupleRoutes from './routes/couple.js'
 import mapRoutes from './routes/maps.js'
 import pinRoutes from './routes/pins.js'
 import uploadRoutes from './routes/upload.js'
+import healthRoutes from './routes/health.js'
 import { setupSocketHandlers } from './socket/index.js'
 
 const app = express()
@@ -32,15 +33,8 @@ app.use(cors({
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-// Health check
-app.get('/health', async (_req, res) => {
-  try {
-    await pool.query('SELECT 1')
-    res.json({ status: 'ok', timestamp: new Date().toISOString() })
-  } catch {
-    res.status(503).json({ status: 'error', message: 'Database connection failed' })
-  }
-})
+// Health check routes
+app.use('/health', healthRoutes)
 
 // API Routes
 app.use('/api/auth', authRoutes)
