@@ -1,10 +1,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { THEMES } from '@/config/constants'
+import { THEMES, type ThemeColors } from '@/config/constants'
 
 type ThemeName = keyof typeof THEMES
 
-interface ThemeColors {
-  name: string
+interface CustomThemeColors {
   primary: string
   secondary: string
   accent: string
@@ -15,13 +14,23 @@ interface ThemeContextType {
   currentTheme: ThemeName
   colors: ThemeColors
   setTheme: (theme: ThemeName) => void
+  setCustomColors: (colors: CustomThemeColors) => void
+  customColors: CustomThemeColors
   themes: typeof THEMES
 }
 
 const ThemeContext = createContext<ThemeContextType | null>(null)
 
+const DEFAULT_CUSTOM_COLORS: CustomThemeColors = {
+  primary: '#E11D48',
+  secondary: '#FB7185',
+  accent: '#831843',
+  background: '#FFF1F2',
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [currentTheme, setCurrentTheme] = useState<ThemeName>('rose_garden')
+  const [customColors, setCustomColorsState] = useState<CustomThemeColors>(DEFAULT_CUSTOM_COLORS)
 
   // Load theme from localStorage on mount
   useEffect(() => {
@@ -29,11 +38,24 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (savedTheme && THEMES[savedTheme]) {
       setCurrentTheme(savedTheme)
     }
+
+    // Load custom colors
+    const savedCustomColors = localStorage.getItem('customThemeColors')
+    if (savedCustomColors) {
+      try {
+        const parsed = JSON.parse(savedCustomColors) as CustomThemeColors
+        setCustomColorsState(parsed)
+      } catch {
+        // Ignore invalid JSON
+      }
+    }
   }, [])
 
   // Apply theme CSS variables
   useEffect(() => {
-    const theme = THEMES[currentTheme]
+    const theme = currentTheme === 'custom'
+      ? { ...customColors, name: 'Custom' }
+      : THEMES[currentTheme]
     const root = document.documentElement
 
     root.style.setProperty('--color-primary', theme.primary)
@@ -46,17 +68,24 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (metaTheme) {
       metaTheme.setAttribute('content', theme.primary)
     }
-  }, [currentTheme])
+  }, [currentTheme, customColors])
 
   const setTheme = (theme: ThemeName) => {
     setCurrentTheme(theme)
     localStorage.setItem('theme', theme)
   }
 
-  const colors = THEMES[currentTheme]
+  const setCustomColors = (colors: CustomThemeColors) => {
+    setCustomColorsState(colors)
+    localStorage.setItem('customThemeColors', JSON.stringify(colors))
+  }
+
+  const colors: ThemeColors = currentTheme === 'custom'
+    ? { ...customColors, name: 'Custom' }
+    : THEMES[currentTheme]
 
   return (
-    <ThemeContext.Provider value={{ currentTheme, colors, setTheme, themes: THEMES }}>
+    <ThemeContext.Provider value={{ currentTheme, colors, setTheme, setCustomColors, customColors, themes: THEMES }}>
       {children}
     </ThemeContext.Provider>
   )

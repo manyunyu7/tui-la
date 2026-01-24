@@ -38,7 +38,22 @@ export const THEMES = {
     accent: '#6D28D9',
     background: '#FAF5FF',
   },
+  custom: {
+    name: 'Custom',
+    primary: '#E11D48',
+    secondary: '#FB7185',
+    accent: '#831843',
+    background: '#FFF1F2',
+  },
 } as const
+
+export type ThemeColors = {
+  name: string
+  primary: string
+  secondary: string
+  accent: string
+  background: string
+}
 
 export const PIN_TYPES = {
   memory: { label: 'Memory', icon: '💝', color: '#E11D48' },

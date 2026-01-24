@@ -189,7 +189,7 @@
   - [x] Midnight Romance (purple/navy)
   - [x] Cherry Blossom (soft pink)
   - [x] Lavender Dreams (purple/lilac)
-- [ ] Custom color picker
+- [x] Custom color picker
 - [x] Save theme preference
 
 ---
