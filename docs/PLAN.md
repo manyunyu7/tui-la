@@ -214,7 +214,7 @@
 - [x] Error boundaries
 
 ### 5.3 Additional Features
-- [ ] Pin filters (by date, type, creator)
+- [x] Pin filters (by date, type, creator)
 - [ ] Timeline view of pins
 - [ ] Anniversary date & reminders
 - [ ] Export map as image

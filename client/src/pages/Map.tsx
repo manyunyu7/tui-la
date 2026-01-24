@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch } from '@/components/map'
+import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter } from '@/components/map'
 import { Button, Modal } from '@/components/ui'
 import { NoPinsEmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
@@ -138,6 +138,13 @@ export function Map() {
   const [strokeColor, setStrokeColor] = useState('#E11D48')
   const [strokeWidth, setStrokeWidth] = useState(4)
   const [partnerStrokes, setPartnerStrokes] = useState<Stroke[]>([])
+
+  // Filter state
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  const [pinFilter, setPinFilter] = useState<PinFilter>({
+    types: ['memory', 'wishlist', 'milestone', 'trip'],
+    createdBy: 'all',
+  })
 
   const {
     pins,
@@ -372,7 +379,7 @@ export function Map() {
             }}
           />
 
-          {pins.map((pin) => (
+          {applyPinFilter(pins, pinFilter, user?.id).map((pin) => (
             <PinMarker
               key={pin.id}
               pin={pin}
@@ -411,6 +418,28 @@ export function Map() {
           onWidthChange={setStrokeWidth}
           onClear={handleClearDrawing}
           onClose={handleDrawingToggle}
+        />
+
+        {/* Filter button */}
+        <div className="absolute left-4 bottom-4 z-[1000]">
+          <FilterButton
+            onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+            hasActiveFilters={
+              pinFilter.types.length < 4 ||
+              pinFilter.dateFrom !== undefined ||
+              pinFilter.dateTo !== undefined ||
+              pinFilter.createdBy !== 'all'
+            }
+          />
+        </div>
+
+        {/* Pin filters panel */}
+        <PinFilters
+          isOpen={isFiltersOpen}
+          onClose={() => setIsFiltersOpen(false)}
+          filter={pinFilter}
+          onFilterChange={setPinFilter}
+          userId={user?.id}
         />
 
         {/* Empty state overlay */}
