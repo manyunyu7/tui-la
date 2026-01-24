@@ -28,6 +28,7 @@ export interface GeoStroke {
 
 interface DrawingCanvasProps {
   isDrawing: boolean
+  tool?: DrawingTool
   strokeColor: string
   strokeWidth: number
   savedDrawings?: GeoStroke[]
@@ -43,8 +44,12 @@ export interface DrawingCanvasRef {
   getStrokes: () => GeoStroke[]
 }
 
+// Eraser uses a special color that blends with map tiles
+const ERASER_COLOR = 'rgba(255, 255, 255, 0.95)'
+
 export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
   isDrawing,
+  tool = 'pen',
   strokeColor,
   strokeWidth,
   savedDrawings = [],
@@ -201,26 +206,27 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
     const geoPoint = screenToGeo(screenPoint)
 
     const strokeId = generateStrokeId()
+    const effectiveColor = tool === 'eraser' ? ERASER_COLOR : strokeColor
     const screenStroke: ScreenStroke = {
       id: strokeId,
       points: [screenPoint],
-      color: strokeColor,
+      color: effectiveColor,
       width: strokeWidth,
     }
     const geoStroke: GeoStroke = {
       id: strokeId,
       pathData: [geoPoint],
-      strokeColor,
+      strokeColor: effectiveColor,
       strokeWidth,
     }
 
     setCurrentStroke({ screen: screenStroke, geo: geoStroke })
     isDrawingRef.current = true
-    onStrokeStart?.(strokeId, strokeColor, strokeWidth)
+    onStrokeStart?.(strokeId, effectiveColor, strokeWidth)
 
     // Capture pointer for smooth drawing
     canvas.setPointerCapture(e.pointerId)
-  }, [isDrawing, strokeColor, strokeWidth, onStrokeStart, screenToGeo])
+  }, [isDrawing, tool, strokeColor, strokeWidth, onStrokeStart, screenToGeo])
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!isDrawingRef.current || !currentStroke) return
@@ -305,12 +311,16 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
 
 DrawingCanvas.displayName = 'DrawingCanvas'
 
+export type DrawingTool = 'pen' | 'eraser'
+
 interface DrawingToolbarProps {
   isVisible: boolean
   strokeColor: string
   strokeWidth: number
+  activeTool: DrawingTool
   onColorChange: (color: string) => void
   onWidthChange: (width: number) => void
+  onToolChange: (tool: DrawingTool) => void
   onClear: () => void
   onClose: () => void
   isSaving?: boolean
@@ -333,8 +343,10 @@ export function DrawingToolbar({
   isVisible,
   strokeColor,
   strokeWidth,
+  activeTool,
   onColorChange,
   onWidthChange,
+  onToolChange,
   onClear,
   onClose,
   isSaving = false,
@@ -343,27 +355,64 @@ export function DrawingToolbar({
 
   return (
     <div className="absolute left-4 top-4 z-[1001] bg-white rounded-xl shadow-lg p-3 space-y-3">
-      {/* Colors */}
+      {/* Tools */}
       <div>
-        <p className="text-xs text-neutral-500 mb-2">Color</p>
-        <div className="flex gap-1.5">
-          {COLORS.map(color => (
-            <button
-              key={color}
-              onClick={() => onColorChange(color)}
-              className={cn(
-                'w-7 h-7 rounded-full transition-transform',
-                strokeColor === color ? 'ring-2 ring-offset-2 ring-neutral-400 scale-110' : ''
-              )}
-              style={{ backgroundColor: color, border: color === '#FFFFFF' ? '1px solid #e5e7eb' : undefined }}
-            />
-          ))}
+        <p className="text-xs text-neutral-500 mb-2">Tool</p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onToolChange('pen')}
+            className={cn(
+              'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
+              activeTool === 'pen'
+                ? 'bg-primary-100 text-primary-600'
+                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+            )}
+            title="Pen"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => onToolChange('eraser')}
+            className={cn(
+              'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
+              activeTool === 'eraser'
+                ? 'bg-primary-100 text-primary-600'
+                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+            )}
+            title="Eraser"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
         </div>
       </div>
 
+      {/* Colors - only show for pen */}
+      {activeTool === 'pen' && (
+        <div>
+          <p className="text-xs text-neutral-500 mb-2">Color</p>
+          <div className="flex gap-1.5">
+            {COLORS.map(color => (
+              <button
+                key={color}
+                onClick={() => onColorChange(color)}
+                className={cn(
+                  'w-7 h-7 rounded-full transition-transform',
+                  strokeColor === color ? 'ring-2 ring-offset-2 ring-neutral-400 scale-110' : ''
+                )}
+                style={{ backgroundColor: color, border: color === '#FFFFFF' ? '1px solid #e5e7eb' : undefined }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Width */}
       <div>
-        <p className="text-xs text-neutral-500 mb-2">Size</p>
+        <p className="text-xs text-neutral-500 mb-2">{activeTool === 'pen' ? 'Size' : 'Eraser Size'}</p>
         <div className="flex gap-2">
           {WIDTHS.map(width => (
             <button
@@ -392,7 +441,7 @@ export function DrawingToolbar({
           className="flex-1 py-2 px-3 text-sm text-neutral-600 bg-neutral-100 rounded-lg hover:bg-neutral-200 transition-colors"
           disabled={isSaving}
         >
-          Clear
+          Clear All
         </button>
         <button
           onClick={onClose}

@@ -143,7 +143,7 @@
 - [x] Freehand drawing tool
 - [x] Stroke color picker
 - [x] Stroke width selector
-- [ ] Eraser tool
+- [x] Eraser tool
 - [x] Clear drawing option
 - [x] Drawing data model (vector paths)
 - [x] Real-time stroke sync
@@ -205,7 +205,7 @@
 - [ ] Service worker for caching
 
 ### 5.2 UX Improvements
-- [ ] Onboarding flow for new users
+- [x] Onboarding flow for new users
 - [x] Keyboard shortcuts
 - [ ] Undo/redo for drawings
 - [ ] Bulk pin management

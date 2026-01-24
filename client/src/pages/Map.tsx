@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter, type GeoStroke, type DrawingCanvasRef, Timeline, TimelineButton, FlyTo, FitBounds, PinClusterGroup } from '@/components/map'
-import { Button, Modal } from '@/components/ui'
+import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter, type GeoStroke, type DrawingCanvasRef, type DrawingTool, Timeline, TimelineButton, FlyTo, FitBounds, PinClusterGroup } from '@/components/map'
+import { Button, Modal, Onboarding, useOnboarding } from '@/components/ui'
 import { NoPinsEmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { usePins } from '@/hooks/usePins'
@@ -125,6 +125,7 @@ export function Map() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const toast = useToast()
+  const { showOnboarding, completeOnboarding } = useOnboarding()
 
   const [mapData, setMapData] = useState<MapWithPinCount | null>(null)
   const [isLoadingMap, setIsLoadingMap] = useState(true)
@@ -136,6 +137,7 @@ export function Map() {
 
   // Drawing state
   const [isDrawingMode, setIsDrawingMode] = useState(false)
+  const [drawingTool, setDrawingTool] = useState<DrawingTool>('pen')
   const [strokeColor, setStrokeColor] = useState('#E11D48')
   const [strokeWidth, setStrokeWidth] = useState(4)
   const [partnerStrokes, setPartnerStrokes] = useState<Stroke[]>([])
@@ -536,8 +538,10 @@ export function Map() {
           isVisible={isDrawingMode}
           strokeColor={strokeColor}
           strokeWidth={strokeWidth}
+          activeTool={drawingTool}
           onColorChange={setStrokeColor}
           onWidthChange={setStrokeWidth}
+          onToolChange={setDrawingTool}
           onClear={handleClearDrawing}
           onClose={handleDrawingToggle}
           isSaving={isSavingDrawings}
@@ -622,6 +626,9 @@ export function Map() {
           </Button>
         </div>
       </Modal>
+
+      {/* Onboarding for new users */}
+      {showOnboarding && <Onboarding onComplete={completeOnboarding} />}
     </div>
   )
 }
