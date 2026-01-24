@@ -150,8 +150,8 @@
   - [x] stroke:start event
   - [x] stroke:update event (points)
   - [x] stroke:end event
-- [ ] Persist drawings to database
-- [ ] Load existing drawings on map load
+- [x] Persist drawings to database
+- [x] Load existing drawings on map load
 
 ---
 

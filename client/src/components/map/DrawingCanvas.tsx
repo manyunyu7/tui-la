@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react'
 import { useMap } from 'react-leaflet'
 import { cn } from '@/utils/cn'
 
@@ -7,54 +7,92 @@ interface Point {
   y: number
 }
 
-interface Stroke {
+interface GeoPoint {
+  lat: number
+  lng: number
+}
+
+interface ScreenStroke {
   id: string
   points: Point[]
   color: string
   width: number
 }
 
+export interface GeoStroke {
+  id: string
+  pathData: GeoPoint[]
+  strokeColor: string
+  strokeWidth: number
+}
+
 interface DrawingCanvasProps {
   isDrawing: boolean
   strokeColor: string
   strokeWidth: number
+  savedDrawings?: GeoStroke[]
   onStrokeStart?: (strokeId: string, color: string, width: number) => void
   onStrokeUpdate?: (strokeId: string, points: Point[]) => void
-  onStrokeEnd?: (strokeId: string) => void
-  partnerStrokes?: Stroke[]
+  onStrokeEnd?: (strokeId: string, geoStroke: GeoStroke) => void
+  partnerStrokes?: ScreenStroke[]
   onClear?: () => void
 }
 
-export function DrawingCanvas({
+export interface DrawingCanvasRef {
+  clearStrokes: () => void
+  getStrokes: () => GeoStroke[]
+}
+
+export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
   isDrawing,
   strokeColor,
   strokeWidth,
+  savedDrawings = [],
   onStrokeStart,
   onStrokeUpdate,
   onStrokeEnd,
   partnerStrokes = [],
   onClear,
-}: DrawingCanvasProps) {
+}, ref) => {
   const map = useMap()
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [strokes, setStrokes] = useState<Stroke[]>([])
-  const [currentStroke, setCurrentStroke] = useState<Stroke | null>(null)
+  const [localStrokes, setLocalStrokes] = useState<GeoStroke[]>([])
+  const [currentStroke, setCurrentStroke] = useState<{ screen: ScreenStroke; geo: GeoStroke } | null>(null)
   const isDrawingRef = useRef(false)
+
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    clearStrokes: () => {
+      setLocalStrokes([])
+      setCurrentStroke(null)
+    },
+    getStrokes: () => localStrokes,
+  }))
 
   // Generate unique stroke ID
   const generateStrokeId = () => `stroke-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
-  // Convert lat/lng to canvas coordinates
-  const latLngToCanvas = useCallback((lat: number, lng: number) => {
-    const point = map.latLngToContainerPoint([lat, lng])
+  // Convert geo to screen coordinates
+  const geoToScreen = useCallback((geo: GeoPoint): Point => {
+    const point = map.latLngToContainerPoint([geo.lat, geo.lng])
     return { x: point.x, y: point.y }
   }, [map])
 
-  // Convert canvas coordinates to lat/lng
-  const canvasToLatLng = useCallback((x: number, y: number) => {
-    const latLng = map.containerPointToLatLng([x, y])
+  // Convert screen to geo coordinates
+  const screenToGeo = useCallback((screen: Point): GeoPoint => {
+    const latLng = map.containerPointToLatLng([screen.x, screen.y])
     return { lat: latLng.lat, lng: latLng.lng }
   }, [map])
+
+  // Convert GeoStroke to ScreenStroke for rendering
+  const geoStrokeToScreen = useCallback((geoStroke: GeoStroke): ScreenStroke => {
+    return {
+      id: geoStroke.id,
+      points: geoStroke.pathData.map(geoToScreen),
+      color: geoStroke.strokeColor,
+      width: geoStroke.strokeWidth,
+    }
+  }, [geoToScreen])
 
   // Redraw all strokes
   const redrawCanvas = useCallback(() => {
@@ -67,9 +105,15 @@ export function DrawingCanvas({
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
+    // Collect all strokes to render
+    const allGeoStrokes = [...savedDrawings, ...localStrokes]
+    const allScreenStrokes = [
+      ...allGeoStrokes.map(geoStrokeToScreen),
+      ...partnerStrokes,
+    ]
+
     // Draw all completed strokes
-    const allStrokes = [...strokes, ...partnerStrokes]
-    for (const stroke of allStrokes) {
+    for (const stroke of allScreenStrokes) {
       if (stroke.points.length < 2) continue
 
       ctx.beginPath()
@@ -86,20 +130,20 @@ export function DrawingCanvas({
     }
 
     // Draw current stroke
-    if (currentStroke && currentStroke.points.length >= 2) {
+    if (currentStroke && currentStroke.screen.points.length >= 2) {
       ctx.beginPath()
-      ctx.strokeStyle = currentStroke.color
-      ctx.lineWidth = currentStroke.width
+      ctx.strokeStyle = currentStroke.screen.color
+      ctx.lineWidth = currentStroke.screen.width
       ctx.lineCap = 'round'
       ctx.lineJoin = 'round'
 
-      ctx.moveTo(currentStroke.points[0].x, currentStroke.points[0].y)
-      for (let i = 1; i < currentStroke.points.length; i++) {
-        ctx.lineTo(currentStroke.points[i].x, currentStroke.points[i].y)
+      ctx.moveTo(currentStroke.screen.points[0].x, currentStroke.screen.points[0].y)
+      for (let i = 1; i < currentStroke.screen.points.length; i++) {
+        ctx.lineTo(currentStroke.screen.points[i].x, currentStroke.screen.points[i].y)
       }
       ctx.stroke()
     }
-  }, [strokes, partnerStrokes, currentStroke])
+  }, [savedDrawings, localStrokes, partnerStrokes, currentStroke, geoStrokeToScreen])
 
   // Handle canvas resize
   useEffect(() => {
@@ -153,22 +197,30 @@ export function DrawingCanvas({
     const rect = canvas.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
+    const screenPoint: Point = { x, y }
+    const geoPoint = screenToGeo(screenPoint)
 
     const strokeId = generateStrokeId()
-    const newStroke: Stroke = {
+    const screenStroke: ScreenStroke = {
       id: strokeId,
-      points: [{ x, y }],
+      points: [screenPoint],
       color: strokeColor,
       width: strokeWidth,
     }
+    const geoStroke: GeoStroke = {
+      id: strokeId,
+      pathData: [geoPoint],
+      strokeColor,
+      strokeWidth,
+    }
 
-    setCurrentStroke(newStroke)
+    setCurrentStroke({ screen: screenStroke, geo: geoStroke })
     isDrawingRef.current = true
     onStrokeStart?.(strokeId, strokeColor, strokeWidth)
 
     // Capture pointer for smooth drawing
     canvas.setPointerCapture(e.pointerId)
-  }, [isDrawing, strokeColor, strokeWidth, onStrokeStart])
+  }, [isDrawing, strokeColor, strokeWidth, onStrokeStart, screenToGeo])
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!isDrawingRef.current || !currentStroke) return
@@ -179,15 +231,22 @@ export function DrawingCanvas({
     const rect = canvas.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
+    const screenPoint: Point = { x, y }
+    const geoPoint = screenToGeo(screenPoint)
 
-    const newPoints = [...currentStroke.points, { x, y }]
-    setCurrentStroke({ ...currentStroke, points: newPoints })
+    const newScreenPoints = [...currentStroke.screen.points, screenPoint]
+    const newGeoPoints = [...currentStroke.geo.pathData, geoPoint]
 
-    // Send update every few points for performance
-    if (newPoints.length % 3 === 0) {
-      onStrokeUpdate?.(currentStroke.id, newPoints)
+    setCurrentStroke({
+      screen: { ...currentStroke.screen, points: newScreenPoints },
+      geo: { ...currentStroke.geo, pathData: newGeoPoints },
+    })
+
+    // Send update every few points for performance (screen coords for real-time sync)
+    if (newScreenPoints.length % 3 === 0) {
+      onStrokeUpdate?.(currentStroke.screen.id, newScreenPoints)
     }
-  }, [currentStroke, onStrokeUpdate])
+  }, [currentStroke, onStrokeUpdate, screenToGeo])
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
     if (!isDrawingRef.current || !currentStroke) return
@@ -198,21 +257,14 @@ export function DrawingCanvas({
     }
 
     // Save stroke
-    if (currentStroke.points.length >= 2) {
-      setStrokes(prev => [...prev, currentStroke])
-      onStrokeEnd?.(currentStroke.id)
+    if (currentStroke.geo.pathData.length >= 2) {
+      setLocalStrokes(prev => [...prev, currentStroke.geo])
+      onStrokeEnd?.(currentStroke.screen.id, currentStroke.geo)
     }
 
     setCurrentStroke(null)
     isDrawingRef.current = false
   }, [currentStroke, onStrokeEnd])
-
-  // Clear all strokes
-  const handleClear = useCallback(() => {
-    setStrokes([])
-    setCurrentStroke(null)
-    onClear?.()
-  }, [onClear])
 
   // Disable map interactions when drawing
   useEffect(() => {
@@ -249,7 +301,9 @@ export function DrawingCanvas({
       onPointerLeave={handlePointerUp}
     />
   )
-}
+})
+
+DrawingCanvas.displayName = 'DrawingCanvas'
 
 interface DrawingToolbarProps {
   isVisible: boolean
@@ -259,6 +313,7 @@ interface DrawingToolbarProps {
   onWidthChange: (width: number) => void
   onClear: () => void
   onClose: () => void
+  isSaving?: boolean
 }
 
 const COLORS = [
@@ -282,6 +337,7 @@ export function DrawingToolbar({
   onWidthChange,
   onClear,
   onClose,
+  isSaving = false,
 }: DrawingToolbarProps) {
   if (!isVisible) return null
 
@@ -334,14 +390,16 @@ export function DrawingToolbar({
         <button
           onClick={onClear}
           className="flex-1 py-2 px-3 text-sm text-neutral-600 bg-neutral-100 rounded-lg hover:bg-neutral-200 transition-colors"
+          disabled={isSaving}
         >
           Clear
         </button>
         <button
           onClick={onClose}
-          className="flex-1 py-2 px-3 text-sm text-white bg-primary-500 rounded-lg hover:bg-primary-600 transition-colors"
+          className="flex-1 py-2 px-3 text-sm text-white bg-primary-500 rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50"
+          disabled={isSaving}
         >
-          Done
+          {isSaving ? 'Saving...' : 'Done'}
         </button>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter } from '@/components/map'
+import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter, type GeoStroke, type DrawingCanvasRef } from '@/components/map'
 import { Button, Modal } from '@/components/ui'
 import { NoPinsEmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
@@ -138,6 +138,9 @@ export function Map() {
   const [strokeColor, setStrokeColor] = useState('#E11D48')
   const [strokeWidth, setStrokeWidth] = useState(4)
   const [partnerStrokes, setPartnerStrokes] = useState<Stroke[]>([])
+  const [savedDrawings, setSavedDrawings] = useState<GeoStroke[]>([])
+  const [isSavingDrawings, setIsSavingDrawings] = useState(false)
+  const drawingCanvasRef = useRef<DrawingCanvasRef>(null)
 
   // Filter state
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
@@ -240,8 +243,19 @@ export function Map() {
       }
     }
 
+    const loadDrawings = async () => {
+      try {
+        const drawings = await api.get<GeoStroke[]>(`/maps/${mapId}/drawings`)
+        setSavedDrawings(drawings)
+      } catch {
+        // Silently fail - drawings are not critical
+        console.error('Failed to load drawings')
+      }
+    }
+
     loadMap()
     fetchPins()
+    loadDrawings()
   }, [mapId, fetchPins, navigate, toast])
 
   const handleMapClick = useCallback((lat: number, lng: number) => {
@@ -249,9 +263,33 @@ export function Map() {
     setClickPosition({ lat, lng })
   }, [isDrawingMode])
 
-  const handleDrawingToggle = useCallback(() => {
+  const handleDrawingToggle = useCallback(async () => {
+    if (isDrawingMode) {
+      // Exiting drawing mode - save all unsaved strokes
+      const unsavedStrokes = drawingCanvasRef.current?.getStrokes() || []
+      if (unsavedStrokes.length > 0 && mapId) {
+        setIsSavingDrawings(true)
+        try {
+          // Save each stroke to the database
+          for (const stroke of unsavedStrokes) {
+            const saved = await api.post<GeoStroke>(`/maps/${mapId}/drawings`, {
+              pathData: stroke.pathData,
+              strokeColor: stroke.strokeColor,
+              strokeWidth: stroke.strokeWidth,
+            })
+            setSavedDrawings(prev => [...prev, saved])
+          }
+          // Clear local strokes after saving
+          drawingCanvasRef.current?.clearStrokes()
+        } catch {
+          toast.error('Failed to save drawings')
+        } finally {
+          setIsSavingDrawings(false)
+        }
+      }
+    }
     setIsDrawingMode(prev => !prev)
-  }, [])
+  }, [isDrawingMode, mapId, toast])
 
   const handleStrokeStart = useCallback((strokeId: string, color: string, width: number) => {
     emitStrokeStart(strokeId, color, width)
@@ -261,13 +299,25 @@ export function Map() {
     emitStrokeUpdate(strokeId, points)
   }, [emitStrokeUpdate])
 
-  const handleStrokeEnd = useCallback((strokeId: string) => {
+  const handleStrokeEnd = useCallback((strokeId: string, geoStroke: GeoStroke) => {
     emitStrokeEnd(strokeId)
+    // Note: We don't save to DB here - we batch save when exiting drawing mode
   }, [emitStrokeEnd])
 
-  const handleClearDrawing = useCallback(() => {
+  const handleClearDrawing = useCallback(async () => {
     setPartnerStrokes([])
-  }, [])
+    drawingCanvasRef.current?.clearStrokes()
+
+    // Also clear saved drawings from database
+    if (mapId && savedDrawings.length > 0) {
+      try {
+        await api.delete(`/maps/${mapId}/drawings`)
+        setSavedDrawings([])
+      } catch {
+        toast.error('Failed to clear saved drawings')
+      }
+    }
+  }, [mapId, savedDrawings.length, toast])
 
   const handleCreatePin = async (formData: PinFormData) => {
     if (!clickPosition) return
@@ -398,9 +448,11 @@ export function Map() {
           )}
 
           <DrawingCanvas
+            ref={drawingCanvasRef}
             isDrawing={isDrawingMode}
             strokeColor={strokeColor}
             strokeWidth={strokeWidth}
+            savedDrawings={savedDrawings}
             onStrokeStart={handleStrokeStart}
             onStrokeUpdate={handleStrokeUpdate}
             onStrokeEnd={handleStrokeEnd}
@@ -418,6 +470,7 @@ export function Map() {
           onWidthChange={setStrokeWidth}
           onClear={handleClearDrawing}
           onClose={handleDrawingToggle}
+          isSaving={isSavingDrawings}
         />
 
         {/* Filter button */}

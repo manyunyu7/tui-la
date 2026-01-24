@@ -13,6 +13,7 @@ import mapRoutes from './routes/maps.js'
 import pinRoutes from './routes/pins.js'
 import uploadRoutes from './routes/upload.js'
 import healthRoutes from './routes/health.js'
+import drawingsRoutes from './routes/drawings.js'
 import { setupSocketHandlers } from './socket/index.js'
 
 const app = express()
@@ -42,6 +43,7 @@ app.use('/api/couple', coupleRoutes)
 app.use('/api/maps', mapRoutes)
 app.use('/api/pins', pinRoutes)
 app.use('/api/upload', uploadRoutes)
+app.use('/api/maps', drawingsRoutes)
 
 // Static files for uploads
 app.use('/uploads', express.static(env.UPLOAD_DIR))
