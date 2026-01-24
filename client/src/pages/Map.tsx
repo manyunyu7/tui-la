@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useMapExport } from '@/hooks/useMapExport'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter, type GeoStroke, type DrawingCanvasRef, type DrawingTool, Timeline, TimelineButton, FlyTo, FitBounds, PinClusterGroup } from '@/components/map'
@@ -158,6 +159,12 @@ export function Map() {
   const [isTimelineOpen, setIsTimelineOpen] = useState(false)
   const [flyToTarget, setFlyToTarget] = useState<{ lat: number; lng: number } | null>(null)
   const [fitBoundsTrigger, setFitBoundsTrigger] = useState(0)
+
+  // Export functionality
+  const { isExporting, downloadImage } = useMapExport({
+    mapContainerId: 'map-container',
+    filename: mapData?.name || 'map-export',
+  })
 
   const {
     pins,
@@ -410,6 +417,15 @@ export function Map() {
     emitCursorMove(lat, lng)
   }, [emitCursorMove])
 
+  const handleExport = useCallback(async () => {
+    const success = await downloadImage('png')
+    if (success) {
+      toast.success('Map exported successfully!')
+    } else {
+      toast.error('Failed to export map')
+    }
+  }, [downloadImage, toast])
+
   const handlePinMove = useCallback(async (pin: Pin, lat: number, lng: number) => {
     try {
       await movePin(pin.id, lat, lng)
@@ -506,7 +522,7 @@ export function Map() {
       </header>
 
       {/* Map */}
-      <div className="flex-1 relative">
+      <div id="map-container" className="flex-1 relative">
         <MapView
           center={mapData ? [mapData.centerLat, mapData.centerLng] : undefined}
           zoom={mapData?.zoomLevel}
@@ -518,6 +534,8 @@ export function Map() {
             isDrawing={isDrawingMode}
             onFitBounds={() => setFitBoundsTrigger(t => t + 1)}
             hasPins={pins.length > 0}
+            onExport={handleExport}
+            isExporting={isExporting}
           />
           <LocateControl />
           <FlyTo

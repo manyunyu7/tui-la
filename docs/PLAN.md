@@ -217,7 +217,7 @@
 - [x] Pin filters (by date, type, creator)
 - [x] Timeline view of pins
 - [ ] Anniversary date & reminders
-- [ ] Export map as image
+- [x] Export map as image
 - [ ] Share map preview (public link)
 - [ ] Voice notes on pins
 
