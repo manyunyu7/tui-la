@@ -65,3 +65,24 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* Marker cluster styles */
+.custom-cluster-icon {
+  background: transparent !important;
+}
+
+.custom-cluster-icon:hover > div {
+  transform: scale(1.1);
+}
+
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background-color: transparent !important;
+}
+
+/* Spiderfy lines */
+.leaflet-cluster-spider-leg {
+  stroke: var(--color-primary-500);
+  stroke-opacity: 0.5;
+}

@@ -198,7 +198,7 @@
 
 ### 5.1 Performance
 - [ ] Image lazy loading
-- [ ] Pin clustering for many markers
+- [x] Pin clustering for many markers
 - [ ] Drawing path optimization
 - [ ] Virtualized pin list
 - [ ] Bundle size optimization

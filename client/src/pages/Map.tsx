@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter, type GeoStroke, type DrawingCanvasRef, Timeline, TimelineButton, FlyTo } from '@/components/map'
+import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter, type GeoStroke, type DrawingCanvasRef, Timeline, TimelineButton, FlyTo, PinClusterGroup } from '@/components/map'
 import { Button, Modal } from '@/components/ui'
 import { NoPinsEmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
@@ -447,15 +447,12 @@ export function Map() {
             }}
           />
 
-          {applyPinFilter(pins, pinFilter, user?.id).map((pin) => (
-            <PinMarker
-              key={pin.id}
-              pin={pin}
-              onClick={handleEditPin}
-              onEdit={handleEditPin}
-              onDelete={handleDeletePin}
-            />
-          ))}
+          <PinClusterGroup
+            pins={applyPinFilter(pins, pinFilter, user?.id)}
+            onPinClick={handleEditPin}
+            onPinEdit={handleEditPin}
+            onPinDelete={handleDeletePin}
+          />
 
           {partnerCursor && (
             <PartnerCursor
