@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "db:migrate": "tsx migrations/run.ts"
+    "db:migrate": "tsx migrations/run.ts",
+    "db:seed": "tsx src/scripts/seed.ts"
   },
   "keywords": [
     "couples",

@@ -28,7 +28,7 @@
   - [x] pins table
   - [x] pin_media table
   - [x] drawings table
-- [ ] Create seed data for development
+- [x] Create seed data for development
 
 ### 1.3 Authentication System
 - [x] User registration endpoint
@@ -109,7 +109,7 @@
 - [x] List user's maps
 - [x] Map settings (name, cover, description)
 - [x] Archive/delete map
-- [ ] Map selector/switcher UI
+- [x] Map selector/switcher UI
 
 ---
 
@@ -139,12 +139,12 @@
 - [ ] Debounced cursor updates
 
 ### 3.4 Drawing System
-- [ ] Canvas overlay on map
-- [ ] Freehand drawing tool
-- [ ] Stroke color picker
-- [ ] Stroke width selector
+- [x] Canvas overlay on map
+- [x] Freehand drawing tool
+- [x] Stroke color picker
+- [x] Stroke width selector
 - [ ] Eraser tool
-- [ ] Clear drawing option
+- [x] Clear drawing option
 - [x] Drawing data model (vector paths)
 - [x] Real-time stroke sync
   - [x] stroke:start event

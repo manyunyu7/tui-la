@@ -2,6 +2,11 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
 import type { Pin } from '@/types'
 
+interface Point {
+  x: number
+  y: number
+}
+
 interface UseSocketOptions {
   mapId: string
   accessToken: string | null
@@ -12,6 +17,9 @@ interface UseSocketOptions {
   onPartnerCursor?: (data: { userId: string; lat: number; lng: number }) => void
   onPartnerJoined?: (data: { userId: string; email: string }) => void
   onPartnerLeft?: (data: { userId: string }) => void
+  onStrokeStarted?: (data: { userId: string; strokeId: string; color: string; width: number }) => void
+  onStrokeUpdated?: (data: { userId: string; strokeId: string; points: Point[] }) => void
+  onStrokeEnded?: (data: { userId: string; strokeId: string }) => void
 }
 
 export function useSocket({
@@ -24,6 +32,9 @@ export function useSocket({
   onPartnerCursor,
   onPartnerJoined,
   onPartnerLeft,
+  onStrokeStarted,
+  onStrokeUpdated,
+  onStrokeEnded,
 }: UseSocketOptions) {
   const socketRef = useRef<Socket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
@@ -54,13 +65,16 @@ export function useSocket({
     socket.on('partner_cursor', onPartnerCursor || (() => {}))
     socket.on('partner_joined', onPartnerJoined || (() => {}))
     socket.on('partner_left', onPartnerLeft || (() => {}))
+    socket.on('stroke_started', onStrokeStarted || (() => {}))
+    socket.on('stroke_updated', onStrokeUpdated || (() => {}))
+    socket.on('stroke_ended', onStrokeEnded || (() => {}))
 
     return () => {
       socket.emit('leave_map', mapId)
       socket.disconnect()
       socketRef.current = null
     }
-  }, [accessToken, mapId, onPinCreated, onPinUpdated, onPinDeleted, onPinMoved, onPartnerCursor, onPartnerJoined, onPartnerLeft])
+  }, [accessToken, mapId, onPinCreated, onPinUpdated, onPinDeleted, onPinMoved, onPartnerCursor, onPartnerJoined, onPartnerLeft, onStrokeStarted, onStrokeUpdated, onStrokeEnded])
 
   const emitCursorMove = useCallback((lat: number, lng: number) => {
     socketRef.current?.emit('cursor_move', { mapId, lat, lng })
@@ -82,6 +96,18 @@ export function useSocket({
     socketRef.current?.emit('pin_move', { mapId, pinId, lat, lng })
   }, [mapId])
 
+  const emitStrokeStart = useCallback((strokeId: string, color: string, width: number) => {
+    socketRef.current?.emit('stroke_start', { mapId, strokeId, color, width })
+  }, [mapId])
+
+  const emitStrokeUpdate = useCallback((strokeId: string, points: Point[]) => {
+    socketRef.current?.emit('stroke_update', { mapId, strokeId, points })
+  }, [mapId])
+
+  const emitStrokeEnd = useCallback((strokeId: string) => {
+    socketRef.current?.emit('stroke_end', { mapId, strokeId })
+  }, [mapId])
+
   return {
     isConnected,
     emitCursorMove,
@@ -89,5 +115,8 @@ export function useSocket({
     emitPinUpdate,
     emitPinDelete,
     emitPinMove,
+    emitStrokeStart,
+    emitStrokeUpdate,
+    emitStrokeEnd,
   }
 }

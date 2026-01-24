@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor } from '@/components/map'
+import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar } from '@/components/map'
 import { Button, Modal } from '@/components/ui'
 import { NoPinsEmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
@@ -11,8 +11,112 @@ import { api } from '@/services/api'
 import type { Pin, MapData } from '@/types'
 import type { PinFormData } from '@/components/map/PinEditor'
 
+interface Stroke {
+  id: string
+  points: Array<{ x: number; y: number }>
+  color: string
+  width: number
+}
+
 interface MapWithPinCount extends MapData {
   pinCount: number
+}
+
+interface MapSelectorProps {
+  currentMap: MapWithPinCount | null
+  onMapSelect: (mapId: string) => void
+}
+
+function MapSelector({ currentMap, onMapSelect }: MapSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [maps, setMaps] = useState<MapWithPinCount[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    if (isOpen && maps.length === 0) {
+      setIsLoading(true)
+      api.get<MapWithPinCount[]>('/maps')
+        .then(setMaps)
+        .finally(() => setIsLoading(false))
+    }
+  }, [isOpen, maps.length])
+
+  if (!currentMap) return null
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 hover:bg-neutral-100 rounded-lg px-2 py-1 transition-colors"
+      >
+        <h1 className="font-bold text-neutral-800">{currentMap.name}</h1>
+        <svg
+          className={`w-4 h-4 text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-neutral-200 py-2 min-w-[200px] z-50">
+          {isLoading ? (
+            <div className="px-4 py-2 text-sm text-neutral-500">Loading...</div>
+          ) : maps.length === 0 ? (
+            <div className="px-4 py-2 text-sm text-neutral-500">No maps found</div>
+          ) : (
+            maps.map(map => (
+              <button
+                key={map.id}
+                onClick={() => {
+                  onMapSelect(map.id)
+                  setIsOpen(false)
+                }}
+                className={`w-full px-4 py-2 text-left hover:bg-neutral-50 flex items-center justify-between ${
+                  map.id === currentMap.id ? 'bg-primary-50' : ''
+                }`}
+              >
+                <div>
+                  <div className="font-medium text-neutral-800">{map.name}</div>
+                  <div className="text-xs text-neutral-500">{map.pinCount} pins</div>
+                </div>
+                {map.id === currentMap.id && (
+                  <svg className="w-5 h-5 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </button>
+            ))
+          )}
+          <div className="border-t border-neutral-100 mt-2 pt-2">
+            <Link
+              to="/maps"
+              className="w-full px-4 py-2 text-left text-sm text-primary-600 hover:bg-primary-50 flex items-center gap-2"
+              onClick={() => setIsOpen(false)}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              View all maps
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function Map() {
@@ -28,6 +132,12 @@ export function Map() {
   const [deletingPin, setDeletingPin] = useState<Pin | null>(null)
   const [partnerCursor, setPartnerCursor] = useState<{ lat: number; lng: number } | null>(null)
   const [isPartnerOnline, setIsPartnerOnline] = useState(false)
+
+  // Drawing state
+  const [isDrawingMode, setIsDrawingMode] = useState(false)
+  const [strokeColor, setStrokeColor] = useState('#E11D48')
+  const [strokeWidth, setStrokeWidth] = useState(4)
+  const [partnerStrokes, setPartnerStrokes] = useState<Stroke[]>([])
 
   const {
     pins,
@@ -49,6 +159,9 @@ export function Map() {
     emitPinCreate,
     emitPinUpdate,
     emitPinDelete,
+    emitStrokeStart,
+    emitStrokeUpdate,
+    emitStrokeEnd,
   } = useSocket({
     mapId: mapId!,
     accessToken,
@@ -88,6 +201,21 @@ export function Map() {
       setIsPartnerOnline(false)
       setPartnerCursor(null)
     }, []),
+    onStrokeStarted: useCallback((data: { userId: string; strokeId: string; color: string; width: number }) => {
+      if (data.userId !== user?.id) {
+        setPartnerStrokes(prev => [...prev, { id: data.strokeId, points: [], color: data.color, width: data.width }])
+      }
+    }, [user?.id]),
+    onStrokeUpdated: useCallback((data: { userId: string; strokeId: string; points: Array<{ x: number; y: number }> }) => {
+      if (data.userId !== user?.id) {
+        setPartnerStrokes(prev => prev.map(s => s.id === data.strokeId ? { ...s, points: data.points } : s))
+      }
+    }, [user?.id]),
+    onStrokeEnded: useCallback((data: { userId: string; strokeId: string }) => {
+      if (data.userId !== user?.id) {
+        // Keep the stroke visible
+      }
+    }, [user?.id]),
   })
 
   useEffect(() => {
@@ -110,7 +238,28 @@ export function Map() {
   }, [mapId, fetchPins, navigate, toast])
 
   const handleMapClick = useCallback((lat: number, lng: number) => {
+    if (isDrawingMode) return
     setClickPosition({ lat, lng })
+  }, [isDrawingMode])
+
+  const handleDrawingToggle = useCallback(() => {
+    setIsDrawingMode(prev => !prev)
+  }, [])
+
+  const handleStrokeStart = useCallback((strokeId: string, color: string, width: number) => {
+    emitStrokeStart(strokeId, color, width)
+  }, [emitStrokeStart])
+
+  const handleStrokeUpdate = useCallback((strokeId: string, points: Array<{ x: number; y: number }>) => {
+    emitStrokeUpdate(strokeId, points)
+  }, [emitStrokeUpdate])
+
+  const handleStrokeEnd = useCallback((strokeId: string) => {
+    emitStrokeEnd(strokeId)
+  }, [emitStrokeEnd])
+
+  const handleClearDrawing = useCallback(() => {
+    setPartnerStrokes([])
   }, [])
 
   const handleCreatePin = async (formData: PinFormData) => {
@@ -183,8 +332,11 @@ export function Map() {
             </svg>
           </Link>
           <div>
-            <h1 className="font-bold text-neutral-800">{mapData?.name}</h1>
-            <div className="flex items-center gap-2 text-xs text-neutral-500">
+            <MapSelector
+              currentMap={mapData}
+              onMapSelect={(newMapId) => navigate(`/map/${newMapId}`)}
+            />
+            <div className="flex items-center gap-2 text-xs text-neutral-500 mt-0.5">
               <span>{pins.length} pins</span>
               {isConnected && (
                 <>
@@ -208,7 +360,10 @@ export function Map() {
           onMapClick={handleMapClick}
           onCenterChange={handleCursorMove}
         >
-          <MapControls />
+          <MapControls
+            onDrawingToggle={handleDrawingToggle}
+            isDrawing={isDrawingMode}
+          />
           <LocateControl />
 
           {pins.map((pin) => (
@@ -228,7 +383,29 @@ export function Map() {
               name="Partner"
             />
           )}
+
+          <DrawingCanvas
+            isDrawing={isDrawingMode}
+            strokeColor={strokeColor}
+            strokeWidth={strokeWidth}
+            onStrokeStart={handleStrokeStart}
+            onStrokeUpdate={handleStrokeUpdate}
+            onStrokeEnd={handleStrokeEnd}
+            partnerStrokes={partnerStrokes}
+            onClear={handleClearDrawing}
+          />
         </MapView>
+
+        {/* Drawing toolbar */}
+        <DrawingToolbar
+          isVisible={isDrawingMode}
+          strokeColor={strokeColor}
+          strokeWidth={strokeWidth}
+          onColorChange={setStrokeColor}
+          onWidthChange={setStrokeWidth}
+          onClear={handleClearDrawing}
+          onClose={handleDrawingToggle}
+        />
 
         {/* Empty state overlay */}
         {!isPinsLoading && pins.length === 0 && (
