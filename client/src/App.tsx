@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { ToastProvider } from '@/components/ui/Toast'
 import { LoadingOverlay } from '@/components/ui/Spinner'
-import { Landing, Login, Register, Pairing, Maps } from '@/pages'
+import { Landing, Login, Register, Pairing, Maps, Map } from '@/pages'
 import './index.css'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -69,6 +69,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Maps />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/map/:mapId"
+        element={
+          <ProtectedRoute>
+            <Map />
           </ProtectedRoute>
         }
       />
