@@ -215,7 +215,7 @@
 
 ### 5.3 Additional Features
 - [x] Pin filters (by date, type, creator)
-- [ ] Timeline view of pins
+- [x] Timeline view of pins
 - [ ] Anniversary date & reminders
 - [ ] Export map as image
 - [ ] Share map preview (public link)

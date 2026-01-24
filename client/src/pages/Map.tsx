@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter, type GeoStroke, type DrawingCanvasRef } from '@/components/map'
+import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter, type GeoStroke, type DrawingCanvasRef, Timeline, TimelineButton, FlyTo } from '@/components/map'
 import { Button, Modal } from '@/components/ui'
 import { NoPinsEmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
@@ -148,6 +148,10 @@ export function Map() {
     types: ['memory', 'wishlist', 'milestone', 'trip'],
     createdBy: 'all',
   })
+
+  // Timeline state
+  const [isTimelineOpen, setIsTimelineOpen] = useState(false)
+  const [flyToTarget, setFlyToTarget] = useState<{ lat: number; lng: number } | null>(null)
 
   const {
     pins,
@@ -336,6 +340,15 @@ export function Map() {
     setEditingPin(pin)
   }
 
+  const handleTimelinePinSelect = (pin: Pin) => {
+    setFlyToTarget({ lat: pin.lat, lng: pin.lng })
+    setIsTimelineOpen(false)
+    // Open the pin for editing after flying to it
+    setTimeout(() => {
+      setEditingPin(pin)
+    }, 1100)
+  }
+
   const handleUpdatePin = async (formData: PinFormData) => {
     if (!editingPin) return
 
@@ -422,6 +435,11 @@ export function Map() {
             isDrawing={isDrawingMode}
           />
           <LocateControl />
+          <FlyTo
+            lat={flyToTarget?.lat ?? null}
+            lng={flyToTarget?.lng ?? null}
+            onComplete={() => setFlyToTarget(null)}
+          />
           <PlaceSearch
             className="absolute left-4 top-4 z-[1000] w-72"
             onPlaceSelect={(lat, lng) => {
@@ -473,8 +491,12 @@ export function Map() {
           isSaving={isSavingDrawings}
         />
 
-        {/* Filter button */}
-        <div className="absolute left-4 bottom-4 z-[1000]">
+        {/* Filter and Timeline buttons */}
+        <div className="absolute left-4 bottom-4 z-[1000] flex flex-col gap-2">
+          <TimelineButton
+            onClick={() => setIsTimelineOpen(!isTimelineOpen)}
+            pinCount={pins.length}
+          />
           <FilterButton
             onClick={() => setIsFiltersOpen(!isFiltersOpen)}
             hasActiveFilters={
@@ -493,6 +515,14 @@ export function Map() {
           filter={pinFilter}
           onFilterChange={setPinFilter}
           userId={user?.id}
+        />
+
+        {/* Timeline panel */}
+        <Timeline
+          isOpen={isTimelineOpen}
+          onClose={() => setIsTimelineOpen(false)}
+          pins={pins}
+          onPinSelect={handleTimelinePinSelect}
         />
 
         {/* Empty state overlay */}

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MapContainer as LeafletMap, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import { cn } from '@/utils/cn'
@@ -103,6 +103,34 @@ export function MapController({ center, zoom }: MapControllerProps) {
       prevZoomRef.current = zoom
     }
   }, [zoom, map])
+
+  return null
+}
+
+interface FlyToProps {
+  lat: number | null
+  lng: number | null
+  zoom?: number
+  onComplete?: () => void
+}
+
+export function FlyTo({ lat, lng, zoom = 16, onComplete }: FlyToProps) {
+  const map = useMap()
+  const hasFlownRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (lat === null || lng === null) return
+
+    const key = `${lat}-${lng}`
+    if (hasFlownRef.current === key) return
+
+    hasFlownRef.current = key
+    map.flyTo([lat, lng], zoom, { duration: 1 })
+
+    if (onComplete) {
+      setTimeout(onComplete, 1000)
+    }
+  }, [lat, lng, zoom, map, onComplete])
 
   return null
 }
