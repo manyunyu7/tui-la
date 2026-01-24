@@ -199,7 +199,7 @@
 ### 5.1 Performance
 - [x] Image lazy loading
 - [x] Pin clustering for many markers
-- [ ] Drawing path optimization
+- [x] Drawing path optimization
 - [ ] Virtualized pin list
 - [ ] Bundle size optimization
 - [ ] Service worker for caching

@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react'
 import { useMap } from 'react-leaflet'
 import { cn } from '@/utils/cn'
+import { simplifyGeoPath } from '@/utils/pathSimplify'
 
 interface Point {
   x: number
@@ -284,11 +285,18 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
       canvas.releasePointerCapture(e.pointerId)
     }
 
-    // Save stroke
+    // Save stroke with path simplification for performance
     if (currentStroke.geo.pathData.length >= 2) {
-      setLocalStrokes(prev => [...prev, currentStroke.geo])
+      // Simplify the geo path to reduce storage and improve performance
+      const simplifiedPath = simplifyGeoPath(currentStroke.geo.pathData, 0.00001)
+      const simplifiedStroke: GeoStroke = {
+        ...currentStroke.geo,
+        pathData: simplifiedPath,
+      }
+
+      setLocalStrokes(prev => [...prev, simplifiedStroke])
       setUndoStack([]) // Clear redo stack when new stroke is added
-      onStrokeEnd?.(currentStroke.screen.id, currentStroke.geo)
+      onStrokeEnd?.(currentStroke.screen.id, simplifiedStroke)
     }
 
     setCurrentStroke(null)
