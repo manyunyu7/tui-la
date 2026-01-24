@@ -3,6 +3,16 @@ import { NotFoundError, ForbiddenError } from '../utils/errors.js'
 import * as mapsService from './maps.js'
 import type { Pin, PinMedia } from '../types/index.js'
 
+export interface PhotoInput {
+  filePath: string
+  thumbnailPath: string
+  originalName: string
+  mimeType: string
+  fileSize: number
+  width: number
+  height: number
+}
+
 export interface CreatePinInput {
   mapId: string
   createdBy: string
@@ -16,6 +26,7 @@ export interface CreatePinInput {
   memoryDate?: string
   isPrivate?: boolean
   metadata?: Record<string, unknown>
+  photos?: PhotoInput[]
 }
 
 export interface UpdatePinInput {
@@ -29,6 +40,7 @@ export interface UpdatePinInput {
   memoryDate?: string
   isPrivate?: boolean
   metadata?: Record<string, unknown>
+  photos?: PhotoInput[]
 }
 
 export interface PinWithMedia extends Omit<Pin, 'deletedAt'> {
@@ -136,6 +148,7 @@ export async function createPin(
     memoryDate,
     isPrivate = false,
     metadata = {},
+    photos = [],
   } = input
 
   const result = await query<Pin>(
@@ -150,9 +163,37 @@ export async function createPin(
     [mapId, createdBy, title, description, lat, lng, pinType, icon, color, memoryDate, isPrivate, metadata]
   )
 
+  const pin = result.rows[0]
+  const media: PinMedia[] = []
+
+  // Add photos if provided
+  for (let i = 0; i < photos.length; i++) {
+    const photo = photos[i]
+    const mediaResult = await query<PinMedia>(
+      `INSERT INTO pin_media (
+        pin_id, type, file_path, thumbnail_path, original_name,
+        file_size, mime_type, width, height, sort_order
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING *`,
+      [
+        pin.id,
+        'image',
+        photo.filePath,
+        photo.thumbnailPath,
+        photo.originalName,
+        photo.fileSize,
+        photo.mimeType,
+        photo.width,
+        photo.height,
+        i,
+      ]
+    )
+    media.push(toMedia(mediaResult.rows[0]))
+  }
+
   return {
-    ...toPin(result.rows[0]),
-    media: [],
+    ...toPin(pin),
+    media,
   }
 }
 
@@ -208,17 +249,58 @@ export async function updatePin(
     values.push(input.metadata)
   }
 
-  if (updates.length === 0) {
-    return getPinById(pinId, coupleId)
+  if (updates.length > 0) {
+    updates.push(`updated_at = NOW()`)
+    values.push(pinId)
+
+    await query(
+      `UPDATE pins SET ${updates.join(', ')} WHERE id = $${++paramCount}`,
+      values
+    )
   }
 
-  updates.push(`updated_at = NOW()`)
-  values.push(pinId)
+  // Handle photos sync if provided
+  if (input.photos !== undefined) {
+    // Get current media
+    const currentMedia = await query<PinMedia>(
+      'SELECT * FROM pin_media WHERE pin_id = $1',
+      [pinId]
+    )
+    const currentPaths = new Set(currentMedia.rows.map(m => m.filePath))
+    const newPaths = new Set(input.photos.map(p => p.filePath))
 
-  await query(
-    `UPDATE pins SET ${updates.join(', ')} WHERE id = $${++paramCount}`,
-    values
-  )
+    // Delete removed photos
+    for (const media of currentMedia.rows) {
+      if (!newPaths.has(media.filePath)) {
+        await query('DELETE FROM pin_media WHERE id = $1', [media.id])
+      }
+    }
+
+    // Add new photos
+    let sortOrder = currentMedia.rows.length
+    for (const photo of input.photos) {
+      if (!currentPaths.has(photo.filePath)) {
+        await query(
+          `INSERT INTO pin_media (
+            pin_id, type, file_path, thumbnail_path, original_name,
+            file_size, mime_type, width, height, sort_order
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          [
+            pinId,
+            'image',
+            photo.filePath,
+            photo.thumbnailPath,
+            photo.originalName,
+            photo.fileSize,
+            photo.mimeType,
+            photo.width,
+            photo.height,
+            sortOrder++,
+          ]
+        )
+      }
+    }
+  }
 
   return getPinById(pinId, coupleId)
 }

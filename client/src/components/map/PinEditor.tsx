@@ -1,7 +1,17 @@
-import { useState } from 'react'
-import { Modal, Button, Input } from '@/components/ui'
+import { useState, useEffect } from 'react'
+import { Modal, Button, Input, PhotoUploader, Lightbox } from '@/components/ui'
 import { PIN_TYPES } from '@/config/constants'
-import type { Pin } from '@/types'
+import type { Pin, PinMedia } from '@/types'
+
+interface UploadedFile {
+  filePath: string
+  thumbnailPath: string
+  originalName: string
+  mimeType: string
+  fileSize: number
+  width: number
+  height: number
+}
 
 interface PinEditorProps {
   isOpen: boolean
@@ -19,10 +29,23 @@ export interface PinFormData {
   icon: string
   color: string
   memoryDate?: string
+  photos: UploadedFile[]
 }
 
 const EMOJI_OPTIONS = ['📍', '❤️', '💑', '🏠', '🍽️', '☕', '🎬', '🎵', '🏖️', '⛰️', '✈️', '🚗', '🎁', '🎂', '💍', '🌸']
 const COLOR_OPTIONS = ['#E11D48', '#F59E0B', '#22C55E', '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16']
+
+function mediaToUploadedFile(media: PinMedia): UploadedFile {
+  return {
+    filePath: media.filePath,
+    thumbnailPath: media.thumbnailPath || media.filePath,
+    originalName: media.originalName || 'photo',
+    mimeType: media.mimeType || 'image/jpeg',
+    fileSize: media.fileSize || 0,
+    width: media.width || 0,
+    height: media.height || 0,
+  }
+}
 
 export function PinEditor({
   isOpen,
@@ -32,14 +55,26 @@ export function PinEditor({
   position,
   isLoading,
 }: PinEditorProps) {
-  const [formData, setFormData] = useState<PinFormData>({
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
+
+  const getInitialFormData = (): PinFormData => ({
     title: pin?.title || '',
     description: pin?.description || '',
     pinType: pin?.pinType || 'memory',
     icon: pin?.icon || '📍',
     color: pin?.color || '#E11D48',
     memoryDate: pin?.memoryDate ? new Date(pin.memoryDate).toISOString().split('T')[0] : '',
+    photos: pin?.media?.filter(m => m.type === 'image').map(mediaToUploadedFile) || [],
   })
+
+  const [formData, setFormData] = useState<PinFormData>(getInitialFormData)
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(getInitialFormData())
+    }
+  }, [isOpen, pin])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -164,6 +199,35 @@ export function PinEditor({
             className="w-full px-4 py-3 bg-white border-2 border-neutral-200 rounded-xl text-neutral-800 transition-all duration-150 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
           />
         </div>
+
+        {/* Photos */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-2">
+            Photos
+          </label>
+          <PhotoUploader
+            photos={formData.photos}
+            onPhotosChange={(photos) => updateField('photos', photos)}
+            maxPhotos={10}
+            onPhotoClick={(index) => {
+              setLightboxIndex(index)
+              setLightboxOpen(true)
+            }}
+          />
+          {formData.photos.length > 0 && (
+            <p className="text-xs text-neutral-400 mt-2">
+              Click a photo to view in full size
+            </p>
+          )}
+        </div>
+
+        {/* Photo Lightbox */}
+        <Lightbox
+          images={formData.photos.map(p => ({ url: p.filePath, alt: p.originalName }))}
+          initialIndex={lightboxIndex}
+          isOpen={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+        />
 
         {/* Location info */}
         {position && (

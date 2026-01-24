@@ -9,6 +9,17 @@ const router = Router()
 
 router.use(authenticate)
 
+// Photo schema for bulk operations
+const photoSchema = z.object({
+  filePath: z.string().min(1),
+  thumbnailPath: z.string().min(1),
+  originalName: z.string(),
+  mimeType: z.string(),
+  fileSize: z.number(),
+  width: z.number(),
+  height: z.number(),
+})
+
 // Validation schemas
 const createPinSchema = z.object({
   mapId: z.string().uuid(),
@@ -19,9 +30,10 @@ const createPinSchema = z.object({
   pinType: z.enum(['memory', 'wishlist', 'milestone', 'trip']).optional(),
   icon: z.string().max(50).optional(),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-  memoryDate: z.string().datetime().optional(),
+  memoryDate: z.string().optional(),
   isPrivate: z.boolean().optional(),
   metadata: z.record(z.unknown()).optional(),
+  photos: z.array(photoSchema).optional(),
 })
 
 const updatePinSchema = z.object({
@@ -32,9 +44,10 @@ const updatePinSchema = z.object({
   pinType: z.enum(['memory', 'wishlist', 'milestone', 'trip']).optional(),
   icon: z.string().max(50).optional(),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-  memoryDate: z.string().datetime().optional(),
+  memoryDate: z.string().optional(),
   isPrivate: z.boolean().optional(),
   metadata: z.record(z.unknown()).optional(),
+  photos: z.array(photoSchema).optional(),
 })
 
 const boundsQuery = z.object({
@@ -50,6 +63,23 @@ const mapIdParams = z.object({
 
 const pinIdParams = z.object({
   pinId: z.string().uuid(),
+})
+
+const pinMediaParams = z.object({
+  pinId: z.string().uuid(),
+  mediaId: z.string().uuid(),
+})
+
+const addMediaSchema = z.object({
+  type: z.enum(['image', 'audio', 'video']).default('image'),
+  filePath: z.string().min(1),
+  thumbnailPath: z.string().optional(),
+  originalName: z.string().optional(),
+  fileSize: z.number().optional(),
+  mimeType: z.string().optional(),
+  width: z.number().optional(),
+  height: z.number().optional(),
+  duration: z.number().optional(),
 })
 
 // GET /api/pins/map/:mapId
@@ -166,6 +196,57 @@ router.delete(
 
       await pinsService.deletePin(req.params.pinId, req.user.coupleId)
       res.json({ data: { message: 'Pin deleted successfully' } })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// POST /api/pins/:pinId/media
+router.post(
+  '/:pinId/media',
+  validateParams(pinIdParams),
+  validateBody(addMediaSchema),
+  async (req: AuthRequest, res, next) => {
+    try {
+      if (!req.user?.coupleId) {
+        res.status(400).json({
+          error: { code: 'NO_COUPLE', message: 'User has no couple' }
+        })
+        return
+      }
+
+      const media = await pinsService.addMediaToPin(
+        req.params.pinId,
+        req.user.coupleId,
+        req.body
+      )
+      res.status(201).json({ data: media })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// DELETE /api/pins/:pinId/media/:mediaId
+router.delete(
+  '/:pinId/media/:mediaId',
+  validateParams(pinMediaParams),
+  async (req: AuthRequest, res, next) => {
+    try {
+      if (!req.user?.coupleId) {
+        res.status(400).json({
+          error: { code: 'NO_COUPLE', message: 'User has no couple' }
+        })
+        return
+      }
+
+      await pinsService.removeMediaFromPin(
+        req.params.mediaId,
+        req.params.pinId,
+        req.user.coupleId
+      )
+      res.json({ data: { message: 'Media removed successfully' } })
     } catch (error) {
       next(error)
     }

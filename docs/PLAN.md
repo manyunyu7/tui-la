@@ -69,46 +69,46 @@
 ## Phase 2: Map Core Features
 
 ### 2.1 Map Integration
-- [ ] Leaflet.js setup with OpenStreetMap
-- [ ] Map component with zoom controls
+- [x] Leaflet.js setup with OpenStreetMap
+- [x] Map component with zoom controls
 - [ ] Custom map styling (romantic feel)
-- [ ] Geolocation support (show current location)
-- [ ] Map bounds and center state management
+- [x] Geolocation support (show current location)
+- [x] Map bounds and center state management
 
 ### 2.2 Pin System
-- [ ] Create pin on map click
-- [ ] Pin data model and API endpoints
-  - [ ] POST /api/maps/:mapId/pins
-  - [ ] GET /api/maps/:mapId/pins
-  - [ ] PUT /api/pins/:pinId
-  - [ ] DELETE /api/pins/:pinId
-- [ ] Pin marker component with custom icons
-- [ ] Pin popup with details
-- [ ] Pin editor modal
-  - [ ] Title and description
-  - [ ] Date picker
-  - [ ] Category/type selector
-  - [ ] Emoji icon picker
-  - [ ] Color picker
+- [x] Create pin on map click
+- [x] Pin data model and API endpoints
+  - [x] POST /api/maps/:mapId/pins
+  - [x] GET /api/maps/:mapId/pins
+  - [x] PUT /api/pins/:pinId
+  - [x] DELETE /api/pins/:pinId
+- [x] Pin marker component with custom icons
+- [x] Pin popup with details
+- [x] Pin editor modal
+  - [x] Title and description
+  - [x] Date picker
+  - [x] Category/type selector
+  - [x] Emoji icon picker
+  - [x] Color picker
 - [ ] Drag to reposition pin
 
 ### 2.3 Photo Uploads
-- [ ] File upload middleware (multer)
-- [ ] Image validation (type, size)
-- [ ] Image processing pipeline (sharp)
-  - [ ] Resize to max dimensions
-  - [ ] Convert to WebP
-  - [ ] Generate thumbnail
-  - [ ] Strip EXIF data
-- [ ] Upload endpoint
-- [ ] Photo gallery in pin editor
-- [ ] Photo viewer/lightbox
+- [x] File upload middleware (multer)
+- [x] Image validation (type, size)
+- [x] Image processing pipeline (sharp)
+  - [x] Resize to max dimensions
+  - [x] Convert to WebP
+  - [x] Generate thumbnail
+  - [x] Strip EXIF data
+- [x] Upload endpoint
+- [x] Photo gallery in pin editor
+- [x] Photo viewer/lightbox
 
 ### 2.4 Map Management
-- [ ] Create new map
-- [ ] List user's maps
-- [ ] Map settings (name, cover, type)
-- [ ] Archive/delete map
+- [x] Create new map
+- [x] List user's maps
+- [x] Map settings (name, cover, description)
+- [x] Archive/delete map
 - [ ] Map selector/switcher UI
 
 ---
@@ -116,26 +116,26 @@
 ## Phase 3: Real-time Collaboration
 
 ### 3.1 Socket.io Setup
-- [ ] Socket.io server configuration
-- [ ] Authentication middleware for sockets
-- [ ] Room management (couple_mapId)
-- [ ] Connection/disconnection handling
+- [x] Socket.io server configuration
+- [x] Authentication middleware for sockets
+- [x] Room management (couple_mapId)
+- [x] Connection/disconnection handling
 - [ ] Redis adapter for scaling
 
 ### 3.2 Real-time Pin Sync
-- [ ] Emit pin:create event
-- [ ] Emit pin:update event
-- [ ] Emit pin:delete event
-- [ ] Emit pin:move event
-- [ ] Handle incoming pin events
-- [ ] Optimistic UI updates
+- [x] Emit pin:create event
+- [x] Emit pin:update event
+- [x] Emit pin:delete event
+- [x] Emit pin:move event
+- [x] Handle incoming pin events
+- [x] Optimistic UI updates
 - [ ] Conflict resolution
 
 ### 3.3 Partner Presence
-- [ ] Track online status
-- [ ] Cursor position sharing
-- [ ] "Partner is viewing" indicator
-- [ ] Partner avatar on map
+- [x] Track online status
+- [x] Cursor position sharing
+- [x] "Partner is viewing" indicator
+- [x] Partner avatar on map
 - [ ] Debounced cursor updates
 
 ### 3.4 Drawing System
@@ -145,11 +145,11 @@
 - [ ] Stroke width selector
 - [ ] Eraser tool
 - [ ] Clear drawing option
-- [ ] Drawing data model (vector paths)
-- [ ] Real-time stroke sync
-  - [ ] stroke:start event
-  - [ ] stroke:update event (points)
-  - [ ] stroke:end event
+- [x] Drawing data model (vector paths)
+- [x] Real-time stroke sync
+  - [x] stroke:start event
+  - [x] stroke:update event (points)
+  - [x] stroke:end event
 - [ ] Persist drawings to database
 - [ ] Load existing drawings on map load
 

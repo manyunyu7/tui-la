@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { Button, Card, CardTitle, Modal, Input } from '@/components/ui'
+import { Button, Card, CardTitle, Modal, Input, PhotoUploader } from '@/components/ui'
 import { NoMapsEmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { api } from '@/services/api'
@@ -9,6 +9,16 @@ import type { MapData } from '@/types'
 
 interface MapWithPinCount extends MapData {
   pinCount: number
+}
+
+interface UploadedFile {
+  filePath: string
+  thumbnailPath: string
+  originalName: string
+  mimeType: string
+  fileSize: number
+  width: number
+  height: number
 }
 
 export function Maps() {
@@ -19,6 +29,8 @@ export function Maps() {
   const [maps, setMaps] = useState<MapWithPinCount[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [editingMap, setEditingMap] = useState<MapWithPinCount | null>(null)
+  const [deletingMap, setDeletingMap] = useState<MapWithPinCount | null>(null)
 
   useEffect(() => {
     fetchMaps()
@@ -43,8 +55,41 @@ export function Maps() {
       setIsCreateModalOpen(false)
       toast.success('Map created!')
       navigate(`/map/${newMap.id}`)
-    } catch (err) {
+    } catch {
       toast.error('Failed to create map')
+    }
+  }
+
+  const handleUpdateMap = async (mapId: string, updates: { name?: string; description?: string; coverPath?: string }) => {
+    try {
+      const updatedMap = await api.put<MapWithPinCount>(`/maps/${mapId}`, updates)
+      setMaps(maps.map(m => m.id === mapId ? { ...m, ...updatedMap } : m))
+      setEditingMap(null)
+      toast.success('Map updated!')
+    } catch {
+      toast.error('Failed to update map')
+    }
+  }
+
+  const handleArchiveMap = async (mapId: string) => {
+    try {
+      await api.put(`/maps/${mapId}`, { isArchived: true })
+      setMaps(maps.filter(m => m.id !== mapId))
+      setDeletingMap(null)
+      toast.success('Map archived')
+    } catch {
+      toast.error('Failed to archive map')
+    }
+  }
+
+  const handleDeleteMap = async (mapId: string) => {
+    try {
+      await api.delete(`/maps/${mapId}`)
+      setMaps(maps.filter(m => m.id !== mapId))
+      setDeletingMap(null)
+      toast.success('Map deleted')
+    } catch {
+      toast.error('Failed to delete map')
     }
   }
 
@@ -93,6 +138,8 @@ export function Maps() {
                 key={map.id}
                 map={map}
                 onClick={() => navigate(`/map/${map.id}`)}
+                onEdit={() => setEditingMap(map)}
+                onDelete={() => setDeletingMap(map)}
               />
             ))}
           </div>
@@ -105,6 +152,45 @@ export function Maps() {
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreateMap}
       />
+
+      {/* Edit Map Modal */}
+      <MapSettingsModal
+        map={editingMap}
+        isOpen={!!editingMap}
+        onClose={() => setEditingMap(null)}
+        onSave={handleUpdateMap}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deletingMap}
+        onClose={() => setDeletingMap(null)}
+        title="Delete Map"
+        size="sm"
+      >
+        <p className="text-neutral-600 mb-4">
+          Are you sure you want to delete "{deletingMap?.name}"? This will remove all pins and data associated with this map.
+        </p>
+        <p className="text-sm text-neutral-500 mb-6">
+          You can also archive the map to hide it without deleting the data.
+        </p>
+        <div className="flex gap-3">
+          <Button
+            variant="ghost"
+            onClick={() => deletingMap && handleArchiveMap(deletingMap.id)}
+            className="flex-1"
+          >
+            Archive
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => deletingMap && handleDeleteMap(deletingMap.id)}
+            className="flex-1"
+          >
+            Delete
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }
@@ -112,14 +198,29 @@ export function Maps() {
 interface MapCardProps {
   map: MapWithPinCount
   onClick: () => void
+  onEdit: () => void
+  onDelete: () => void
 }
 
-function MapCard({ map, onClick }: MapCardProps) {
+function MapCard({ map, onClick, onEdit, onDelete }: MapCardProps) {
+  const [showMenu, setShowMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
   const typeLabels = {
     shared: 'Shared Map',
     solo_trip: 'Solo Trip',
     memory_collection: 'Memory Collection',
   }
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
     <Card hoverable onClick={onClick} padding="none" className="overflow-hidden">
@@ -132,10 +233,52 @@ function MapCard({ map, onClick }: MapCardProps) {
             className="w-full h-full object-cover"
           />
         )}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 left-3">
           <span className="bg-white/90 backdrop-blur-sm text-xs font-medium text-neutral-600 px-2 py-1 rounded-full">
             {typeLabels[map.type]}
           </span>
+        </div>
+
+        {/* Menu button */}
+        <div className="absolute top-3 right-3" ref={menuRef}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowMenu(!showMenu)
+            }}
+            className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors"
+          >
+            <svg className="w-4 h-4 text-neutral-600" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="5" r="2" />
+              <circle cx="12" cy="12" r="2" />
+              <circle cx="12" cy="19" r="2" />
+            </svg>
+          </button>
+
+          {showMenu && (
+            <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-neutral-200 py-1 min-w-[120px] z-10">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowMenu(false)
+                  onEdit()
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50"
+              >
+                Settings
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowMenu(false)
+                  onDelete()
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-error-600 hover:bg-error-50"
+              >
+                Delete
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -235,6 +378,98 @@ function CreateMapModal({ isOpen, onClose, onCreate }: CreateMapModalProps) {
           </Button>
           <Button type="submit" loading={isCreating} disabled={!name.trim()}>
             Create Map
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
+interface MapSettingsModalProps {
+  map: MapWithPinCount | null
+  isOpen: boolean
+  onClose: () => void
+  onSave: (mapId: string, updates: { name?: string; description?: string; coverPath?: string }) => void
+}
+
+function MapSettingsModal({ map, isOpen, onClose, onSave }: MapSettingsModalProps) {
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [coverPhoto, setCoverPhoto] = useState<UploadedFile[]>([])
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    if (map) {
+      setName(map.name)
+      setDescription(map.description || '')
+      setCoverPhoto(map.coverPath ? [{
+        filePath: map.coverPath,
+        thumbnailPath: map.coverPath,
+        originalName: 'cover',
+        mimeType: 'image/webp',
+        fileSize: 0,
+        width: 0,
+        height: 0,
+      }] : [])
+    }
+  }, [map])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!map) return
+
+    setIsSaving(true)
+    await onSave(map.id, {
+      name,
+      description: description || undefined,
+      coverPath: coverPhoto[0]?.filePath,
+    })
+    setIsSaving(false)
+  }
+
+  if (!map) return null
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Map Settings" size="lg">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label="Map Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Our Adventures"
+          required
+        />
+
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+            Description (optional)
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="A short description of this map..."
+            rows={3}
+            className="w-full px-4 py-3 bg-white border-2 border-neutral-200 rounded-xl text-neutral-800 placeholder:text-neutral-400 transition-all duration-150 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 resize-none"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-2">
+            Cover Photo
+          </label>
+          <PhotoUploader
+            photos={coverPhoto}
+            onPhotosChange={setCoverPhoto}
+            maxPhotos={1}
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4">
+          <Button variant="ghost" type="button" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" loading={isSaving} disabled={!name.trim()}>
+            Save Changes
           </Button>
         </div>
       </form>
