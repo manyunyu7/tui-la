@@ -11,407 +11,425 @@
 ## Phase 1: Foundation
 
 ### Project Setup
-- [ ] Create client directory with Vite + React + TypeScript
-- [ ] Create server directory with Express + TypeScript
-- [ ] Setup Tailwind CSS with custom config
-- [ ] Create docker-compose.yml with PostgreSQL + Redis
-- [ ] Create .env.example and .env files
-- [ ] Setup ESLint + Prettier for both client/server
-- [ ] Setup path aliases (@/ for src)
+- [x] Create client directory with Vite + React + TypeScript
+- [x] Create server directory with Express + TypeScript
+- [x] Setup Tailwind CSS with custom config
+- [x] Create docker-compose.yml with PostgreSQL + Redis
+- [x] Create .env.example and .env files
+- [x] Setup ESLint + Prettier for both client/server
+- [x] Setup path aliases (@/ for src)
 - [ ] Create shared types package (optional)
 
 ### Database
-- [ ] Create docker-compose services for postgres + redis
-- [ ] Enable PostGIS extension
-- [ ] Setup node-pg-migrate
-- [ ] Migration: create_users_table
-- [ ] Migration: create_couples_table
-- [ ] Migration: create_maps_table
-- [ ] Migration: create_pins_table
-- [ ] Migration: create_pin_media_table
-- [ ] Migration: create_drawings_table
-- [ ] Migration: create_reactions_table
-- [ ] Migration: create_comments_table
-- [ ] Seed: test users
-- [ ] Seed: test couple
-- [ ] Seed: sample map with pins
+- [x] Create docker-compose services for postgres + redis
+- [x] Enable PostGIS extension
+- [x] Setup migration runner (custom TypeScript)
+- [x] Migration: create_users_table
+- [x] Migration: create_couples_table
+- [x] Migration: create_maps_table
+- [x] Migration: create_pins_table
+- [x] Migration: create_pin_media_table
+- [x] Migration: create_drawings_table
+- [x] Migration: create_reactions_table
+- [x] Migration: create_comments_table
+- [x] Migration: create_chat_messages_table
+- [x] Seed: test users
+- [x] Seed: test couple
+- [x] Seed: sample map with pins
 
 ### Authentication (Server)
-- [ ] POST /api/auth/register
-  - [ ] Validate email format
-  - [ ] Check email uniqueness
-  - [ ] Hash password (bcrypt, 12 rounds)
-  - [ ] Generate invite code
-  - [ ] Create user + couple
-  - [ ] Return tokens + user data
-- [ ] POST /api/auth/login
-  - [ ] Validate credentials
-  - [ ] Compare password hash
-  - [ ] Generate tokens
-  - [ ] Return tokens + user data
-- [ ] POST /api/auth/refresh
-  - [ ] Validate refresh token
-  - [ ] Generate new access token
-  - [ ] Rotate refresh token
-- [ ] POST /api/auth/logout
-  - [ ] Invalidate refresh token
-- [ ] GET /api/auth/me
-  - [ ] Return current user + couple data
-- [ ] Auth middleware
-  - [ ] Verify JWT
-  - [ ] Attach user to request
-  - [ ] Handle expired tokens
-- [ ] Rate limiter middleware
+- [x] POST /api/auth/register
+  - [x] Validate email format
+  - [x] Check email uniqueness
+  - [x] Hash password (bcrypt, 12 rounds)
+  - [x] Generate invite code
+  - [x] Create user + couple
+  - [x] Return tokens + user data
+- [x] POST /api/auth/login
+  - [x] Validate credentials
+  - [x] Compare password hash
+  - [x] Generate tokens
+  - [x] Return tokens + user data
+- [x] POST /api/auth/refresh
+  - [x] Validate refresh token
+  - [x] Generate new access token
+  - [x] Rotate refresh token
+- [x] POST /api/auth/logout
+  - [x] Invalidate refresh token
+- [x] GET /api/auth/me
+  - [x] Return current user + couple data
+- [x] Auth middleware
+  - [x] Verify JWT
+  - [x] Attach user to request
+  - [x] Handle expired tokens
+- [x] Rate limiter middleware
 
 ### Couple Pairing (Server)
-- [ ] POST /api/couple/join
-  - [ ] Validate invite code
-  - [ ] Check code not already used
-  - [ ] Link user to couple
-  - [ ] Notify partner (socket)
-- [ ] GET /api/couple/status
-  - [ ] Return couple info
-  - [ ] Return partner info (if paired)
-- [ ] DELETE /api/couple/unpair
-  - [ ] Require confirmation
-  - [ ] Remove partner from couple
-  - [ ] Handle data ownership
+- [x] POST /api/couple/join
+  - [x] Validate invite code
+  - [x] Check code not already used
+  - [x] Link user to couple
+  - [x] Notify partner (socket)
+- [x] GET /api/couple/status
+  - [x] Return couple info
+  - [x] Return partner info (if paired)
+- [x] DELETE /api/couple/unpair
+  - [x] Require confirmation
+  - [x] Remove partner from couple
+  - [x] Handle data ownership
 
 ### UI Components (Client)
-- [ ] Tailwind config with romantic colors
-- [ ] Font setup (Inter or similar friendly font)
-- [ ] components/ui/Button.tsx
-  - [ ] Variants: primary, secondary, ghost, danger
-  - [ ] Sizes: sm, md, lg
-  - [ ] Loading state
-  - [ ] Chunky 3D effect
-- [ ] components/ui/Input.tsx
-  - [ ] Label support
-  - [ ] Error state
-  - [ ] Icon support (left/right)
-- [ ] components/ui/Card.tsx
-- [ ] components/ui/Modal.tsx
-  - [ ] Portal rendering
-  - [ ] Close on backdrop click
-  - [ ] Close on Escape
-  - [ ] Animation
-- [ ] components/ui/Toast.tsx
-  - [ ] Toast context/provider
-  - [ ] Variants: success, error, info
-  - [ ] Auto dismiss
-- [ ] components/ui/Spinner.tsx
-  - [ ] Heart pulse animation
-- [ ] components/ui/Avatar.tsx
-  - [ ] Image support
-  - [ ] Fallback initials
-  - [ ] Online indicator
-- [ ] components/ui/EmptyState.tsx
-- [ ] components/ui/Dropdown.tsx
-- [ ] components/ui/EmojiPicker.tsx
+- [x] Tailwind config with romantic colors
+- [x] Font setup (system font stack)
+- [x] components/ui/Button.tsx
+  - [x] Variants: primary, secondary, ghost, danger
+  - [x] Sizes: sm, md, lg
+  - [x] Loading state
+  - [x] Chunky 3D effect
+- [x] components/ui/Input.tsx
+  - [x] Label support
+  - [x] Error state
+  - [x] Icon support (left/right)
+- [x] components/ui/Card.tsx
+- [x] components/ui/Modal.tsx
+  - [x] Portal rendering
+  - [x] Close on backdrop click
+  - [x] Close on Escape
+  - [x] Animation
+- [x] components/ui/Toast.tsx
+  - [x] Toast context/provider
+  - [x] Variants: success, error, info
+  - [x] Auto dismiss
+- [x] components/ui/Spinner.tsx
+  - [x] Heart pulse animation
+- [x] components/ui/Avatar.tsx
+  - [x] Image support
+  - [x] Fallback initials
+  - [x] Online indicator
+- [x] components/ui/EmptyState.tsx
+- [x] components/ui/Dropdown.tsx
+- [x] components/ui/EmojiPicker.tsx
 
 ### Auth Pages (Client)
-- [ ] contexts/AuthContext.tsx
-  - [ ] User state
-  - [ ] Login/logout methods
-  - [ ] Token management
-  - [ ] Auto refresh
-- [ ] pages/Landing.tsx
-  - [ ] Hero section
-  - [ ] Feature highlights
-  - [ ] CTA buttons
-- [ ] pages/Register.tsx
-  - [ ] Form validation
-  - [ ] Loading state
-  - [ ] Error handling
-  - [ ] Redirect after success
-- [ ] pages/Login.tsx
-  - [ ] Form validation
-  - [ ] Remember me option
-  - [ ] Forgot password link (future)
-- [ ] pages/Pairing.tsx
-  - [ ] Show invite code
-  - [ ] Copy code button
-  - [ ] Enter partner code input
-  - [ ] Waiting for partner state
-- [ ] Protected route wrapper
+- [x] contexts/AuthContext.tsx
+  - [x] User state
+  - [x] Login/logout methods
+  - [x] Token management
+  - [x] Auto refresh
+- [x] pages/Landing.tsx
+  - [x] Hero section
+  - [x] Feature highlights
+  - [x] CTA buttons
+- [x] pages/Register.tsx
+  - [x] Form validation
+  - [x] Loading state
+  - [x] Error handling
+  - [x] Redirect after success
+- [x] pages/Login.tsx
+  - [x] Form validation
+  - [x] Remember me option
+  - [x] Forgot password link (future)
+- [x] pages/Pairing.tsx
+  - [x] Show invite code
+  - [x] Copy code button
+  - [x] Enter partner code input
+  - [x] Waiting for partner state
+- [x] Protected route wrapper
 
 ---
 
 ## Phase 2: Map Core
 
 ### Map Setup (Client)
-- [ ] Install react-leaflet + leaflet
-- [ ] components/map/MapContainer.tsx
-  - [ ] OpenStreetMap tile layer
-  - [ ] Custom styling/attribution
-  - [ ] Zoom controls
-  - [ ] Center on user location
-- [ ] components/map/MapControls.tsx
-  - [ ] Zoom in/out buttons
-  - [ ] Center on me button
-  - [ ] Drawing toggle
-- [ ] contexts/MapContext.tsx
-  - [ ] Current map state
-  - [ ] Viewport state
-  - [ ] Selected pin state
+- [x] Install react-leaflet + leaflet
+- [x] components/map/MapContainer.tsx
+  - [x] OpenStreetMap tile layer
+  - [x] Custom styling/attribution
+  - [x] Zoom controls
+  - [x] Center on user location
+- [x] components/map/MapControls.tsx
+  - [x] Zoom in/out buttons
+  - [x] Center on me button
+  - [x] Drawing toggle
+- [x] Map state management (zustand)
 
 ### Pin System (Server)
-- [ ] POST /api/maps/:mapId/pins
-  - [ ] Validate map ownership
-  - [ ] Create pin with location
-  - [ ] Return created pin
-- [ ] GET /api/maps/:mapId/pins
-  - [ ] Filter by bounds (optional)
-  - [ ] Include pin media
-- [ ] GET /api/pins/:pinId
-  - [ ] Validate access
-  - [ ] Include all details
-- [ ] PUT /api/pins/:pinId
-  - [ ] Validate ownership
-  - [ ] Update fields
-- [ ] DELETE /api/pins/:pinId
-  - [ ] Soft delete
-  - [ ] Remove from map
+- [x] POST /api/maps/:mapId/pins
+  - [x] Validate map ownership
+  - [x] Create pin with location
+  - [x] Return created pin
+- [x] GET /api/maps/:mapId/pins
+  - [x] Filter by bounds (optional)
+  - [x] Include pin media
+- [x] GET /api/pins/:pinId
+  - [x] Validate access
+  - [x] Include all details
+- [x] PUT /api/pins/:pinId
+  - [x] Validate ownership
+  - [x] Update fields
+- [x] DELETE /api/pins/:pinId
+  - [x] Soft delete
+  - [x] Remove from map
 
 ### Pin System (Client)
-- [ ] components/map/PinMarker.tsx
-  - [ ] Custom icon based on type
-  - [ ] Emoji support
-  - [ ] Color support
-  - [ ] Click handler
-- [ ] components/map/PinPopup.tsx
-  - [ ] Title and date
-  - [ ] Thumbnail preview
-  - [ ] Quick actions
-- [ ] components/pin/PinEditor.tsx
-  - [ ] Title input
-  - [ ] Description textarea
-  - [ ] Date picker
-  - [ ] Type selector
-  - [ ] Emoji picker for icon
-  - [ ] Color picker
-  - [ ] Photo upload section
-  - [ ] Save/cancel buttons
-- [ ] components/pin/PinDetail.tsx
-  - [ ] Full pin view
-  - [ ] Photo gallery
-  - [ ] Edit/delete buttons
-  - [ ] Comments section
-- [ ] hooks/usePins.ts
-  - [ ] Fetch pins
-  - [ ] Create pin
-  - [ ] Update pin
-  - [ ] Delete pin
-  - [ ] Optimistic updates
+- [x] components/map/PinMarker.tsx
+  - [x] Custom icon based on type
+  - [x] Emoji support
+  - [x] Color support
+  - [x] Click handler
+- [x] components/map/PinPopup.tsx
+  - [x] Title and date
+  - [x] Thumbnail preview
+  - [x] Quick actions
+- [x] components/pin/PinEditor.tsx
+  - [x] Title input
+  - [x] Description textarea
+  - [x] Date picker
+  - [x] Type selector
+  - [x] Emoji picker for icon
+  - [x] Color picker
+  - [x] Photo upload section
+  - [x] Save/cancel buttons
+- [x] components/pin/PinDetail.tsx
+  - [x] Full pin view
+  - [x] Photo gallery
+  - [x] Edit/delete buttons
+  - [x] Reactions section
+  - [x] Comments section
+- [x] hooks/usePins.ts
+  - [x] Fetch pins
+  - [x] Create pin
+  - [x] Update pin
+  - [x] Delete pin
+  - [x] Optimistic updates
 
 ### Photo Upload (Server)
-- [ ] POST /api/upload
-  - [ ] Multer middleware
-  - [ ] File type validation
-  - [ ] Size limit (10MB)
-  - [ ] Process with sharp
-  - [ ] Store original + thumbnail
-  - [ ] Return file info
-- [ ] GET /api/uploads/:path
-  - [ ] Serve static files
-  - [ ] Validate access
-- [ ] DELETE /api/uploads/:id
-  - [ ] Remove file
-  - [ ] Update database
+- [x] POST /api/upload
+  - [x] Multer middleware
+  - [x] File type validation
+  - [x] Size limit (10MB)
+  - [x] Process with sharp
+  - [x] Store original + thumbnail
+  - [x] Return file info
+- [x] GET /api/uploads/:path
+  - [x] Serve static files
+  - [x] Validate access
+- [x] DELETE /api/uploads/:id
+  - [x] Remove file
+  - [x] Update database
 
 ### Photo Upload (Client)
-- [ ] components/upload/PhotoUploader.tsx
-  - [ ] Drag and drop zone
-  - [ ] File input fallback
-  - [ ] Preview thumbnails
-  - [ ] Progress indicator
-  - [ ] Remove photo button
-- [ ] components/ui/Lightbox.tsx
-  - [ ] Full screen image view
-  - [ ] Navigation arrows
-  - [ ] Close button
-- [ ] services/upload.ts
-  - [ ] Upload function
-  - [ ] Progress callback
+- [x] components/upload/PhotoUploader.tsx
+  - [x] Drag and drop zone
+  - [x] File input fallback
+  - [x] Preview thumbnails
+  - [x] Progress indicator
+  - [x] Remove photo button
+- [x] components/ui/Lightbox.tsx
+  - [x] Full screen image view
+  - [x] Navigation arrows
+  - [x] Close button
+- [x] services/upload.ts
+  - [x] Upload function
+  - [x] Progress callback
 
 ### Map Management (Server)
-- [ ] POST /api/maps
-  - [ ] Create map for couple
-  - [ ] Set default center/zoom
-- [ ] GET /api/maps
-  - [ ] List couple's maps
-  - [ ] Include pin counts
-- [ ] GET /api/maps/:mapId
-  - [ ] Full map details
-- [ ] PUT /api/maps/:mapId
-  - [ ] Update name, cover, settings
-- [ ] DELETE /api/maps/:mapId
-  - [ ] Soft delete/archive
+- [x] POST /api/maps
+  - [x] Create map for couple
+  - [x] Set default center/zoom
+- [x] GET /api/maps
+  - [x] List couple's maps
+  - [x] Include pin counts
+- [x] GET /api/maps/:mapId
+  - [x] Full map details
+- [x] PUT /api/maps/:mapId
+  - [x] Update name, cover, settings
+- [x] DELETE /api/maps/:mapId
+  - [x] Soft delete/archive
 
 ### Map Management (Client)
-- [ ] pages/Maps.tsx (list view)
-  - [ ] Map cards grid
-  - [ ] Create new map button
-  - [ ] Empty state
-- [ ] pages/Map.tsx (single map)
-  - [ ] Map container
-  - [ ] Sidebar with pins list
-  - [ ] Toolbar
-- [ ] components/map/MapCard.tsx
-  - [ ] Cover image
-  - [ ] Name and stats
-  - [ ] Last updated
-- [ ] components/map/CreateMapModal.tsx
-  - [ ] Name input
-  - [ ] Type selector
-  - [ ] Cover upload
+- [x] pages/Maps.tsx (list view)
+  - [x] Map cards grid
+  - [x] Create new map button
+  - [x] Empty state
+- [x] pages/Map.tsx (single map)
+  - [x] Map container
+  - [x] Sidebar with pins list
+  - [x] Toolbar
+- [x] components/map/MapCard.tsx
+  - [x] Cover image
+  - [x] Name and stats
+  - [x] Last updated
+- [x] components/map/CreateMapModal.tsx
+  - [x] Name input
+  - [x] Type selector
+  - [x] Cover upload
 
 ---
 
 ## Phase 3: Real-time
 
 ### Socket Setup (Server)
-- [ ] Socket.io server initialization
-- [ ] Socket authentication middleware
-- [ ] Room management helpers
+- [x] Socket.io server initialization
+- [x] Socket authentication middleware
+- [x] Room management helpers
 - [ ] Redis adapter setup
-- [ ] Connection logging
-- [ ] Disconnect cleanup
+- [x] Connection logging (pino structured logs)
+- [x] Disconnect cleanup
 
 ### Socket Events (Server)
-- [ ] Handle: join_map
-  - [ ] Join room: map_{mapId}
-  - [ ] Broadcast partner joined
-- [ ] Handle: leave_map
-  - [ ] Leave room
-  - [ ] Broadcast partner left
-- [ ] Handle: cursor_move
-  - [ ] Broadcast to room (debounced)
-- [ ] Handle: pin_create
-  - [ ] Validate and save
-  - [ ] Broadcast to partner
-- [ ] Handle: pin_update
-  - [ ] Validate and save
-  - [ ] Broadcast to partner
-- [ ] Handle: pin_delete
-  - [ ] Validate and delete
-  - [ ] Broadcast to partner
-- [ ] Handle: pin_move
-  - [ ] Validate and update coords
-  - [ ] Broadcast to partner
-- [ ] Handle: stroke_start
-  - [ ] Broadcast to partner
-- [ ] Handle: stroke_update
-  - [ ] Broadcast points to partner
-- [ ] Handle: stroke_end
-  - [ ] Save to database
-  - [ ] Broadcast completion
+- [x] Handle: join_map
+  - [x] Join room: map_{mapId}
+  - [x] Broadcast partner joined
+- [x] Handle: leave_map
+  - [x] Leave room
+  - [x] Broadcast partner left
+- [x] Handle: cursor_move
+  - [x] Broadcast to room (debounced)
+- [x] Handle: pin_create
+  - [x] Validate and save
+  - [x] Broadcast to partner
+- [x] Handle: pin_update
+  - [x] Validate and save
+  - [x] Broadcast to partner
+- [x] Handle: pin_delete
+  - [x] Validate and delete
+  - [x] Broadcast to partner
+- [x] Handle: pin_move
+  - [x] Validate and update coords
+  - [x] Broadcast to partner
+- [x] Handle: stroke_start
+  - [x] Broadcast to partner
+- [x] Handle: stroke_update
+  - [x] Broadcast points to partner
+- [x] Handle: stroke_end
+  - [x] Save to database
+  - [x] Broadcast completion
+- [x] Handle: chat_message
+  - [x] Persist to database
+  - [x] Broadcast to partner
+- [x] Handle: chat_typing
+  - [x] Broadcast to partner
 
 ### Socket Client (Client)
-- [ ] contexts/SocketContext.tsx
-  - [ ] Connection management
-  - [ ] Auto reconnection
-  - [ ] Event handlers
-- [ ] hooks/useSocket.ts
-  - [ ] Connect/disconnect
-  - [ ] Emit helpers
-  - [ ] Event listeners
-- [ ] hooks/useRealtimePins.ts
-  - [ ] Merge local and remote changes
-  - [ ] Optimistic updates
-- [ ] hooks/usePartnerPresence.ts
-  - [ ] Partner online status
-  - [ ] Partner cursor position
-- [ ] components/map/PartnerCursor.tsx
-  - [ ] Avatar following cursor
-  - [ ] Smooth animation
-- [ ] components/ui/OnlineIndicator.tsx
+- [x] contexts/SocketContext.tsx
+  - [x] Connection management
+  - [x] Auto reconnection
+  - [x] Event handlers
+- [x] hooks/useSocket.ts
+  - [x] Connect/disconnect
+  - [x] Emit helpers
+  - [x] Event listeners
+  - [x] Chat events (emitChatMessage, emitChatTyping, onChatReceived, onPartnerTyping)
+- [x] hooks/useRealtimePins.ts
+  - [x] Merge local and remote changes
+  - [x] Optimistic updates
+- [x] hooks/usePartnerPresence.ts
+  - [x] Partner online status
+  - [x] Partner cursor position
+- [x] components/map/PartnerCursor.tsx
+  - [x] Avatar following cursor
+  - [x] Smooth animation
+- [x] components/ui/OnlineIndicator.tsx
 
 ### Drawing System (Client)
-- [ ] components/map/DrawingCanvas.tsx
-  - [ ] Canvas overlay on map
-  - [ ] Touch/mouse events
-  - [ ] Coordinate mapping
-- [ ] components/map/DrawingToolbar.tsx
-  - [ ] Pen tool
-  - [ ] Eraser tool
-  - [ ] Color picker
-  - [ ] Width slider
-  - [ ] Clear all button
-- [ ] hooks/useDrawing.ts
-  - [ ] Current tool state
-  - [ ] Stroke history
-  - [ ] Undo/redo
-- [ ] services/drawing.ts
-  - [ ] Path optimization
-  - [ ] Path serialization
+- [x] components/map/DrawingCanvas.tsx
+  - [x] Canvas overlay on map
+  - [x] Touch/mouse events
+  - [x] Coordinate mapping
+- [x] components/map/DrawingToolbar.tsx
+  - [x] Pen tool
+  - [x] Eraser tool
+  - [x] Color picker
+  - [x] Width slider
+  - [x] Clear all button
+- [x] hooks/useDrawing.ts
+  - [x] Current tool state
+  - [x] Stroke history
+  - [x] Undo/redo
+- [x] services/drawing.ts
+  - [x] Path optimization (Douglas-Peucker)
+  - [x] Path serialization
 
 ### Drawing Sync
-- [ ] Emit strokes in real-time
-- [ ] Receive and render partner strokes
-- [ ] Persist completed strokes
-- [ ] Load existing drawings
+- [x] Emit strokes in real-time
+- [x] Receive and render partner strokes
+- [x] Persist completed strokes
+- [x] Load existing drawings
 
 ---
 
 ## Phase 4: Enhanced Features
 
+### Chat System
+- [x] Chat messages table (migration 011)
+- [x] Chat service (create, get with pagination, soft delete)
+- [x] Chat API routes (GET/POST/DELETE /api/maps/:mapId/chat)
+- [x] ChatWindow component
+- [x] Typing indicator
+- [x] Unread message badge
+- [x] Auto-scroll to latest message
+
 ### Reactions & Comments
-- [ ] POST /api/pins/:pinId/reactions
-- [ ] DELETE /api/pins/:pinId/reactions/:reactionId
-- [ ] POST /api/pins/:pinId/comments
-- [ ] GET /api/pins/:pinId/comments
-- [ ] DELETE /api/comments/:commentId
-- [ ] Reaction picker UI
-- [ ] Reaction display on pins
-- [ ] Comment thread UI
-- [ ] Real-time sync
+- [x] POST /api/pins/:pinId/reactions
+- [x] DELETE /api/pins/:pinId/reactions/:reactionId
+- [x] POST /api/pins/:pinId/comments
+- [x] GET /api/pins/:pinId/comments
+- [x] DELETE /api/comments/:commentId
+- [x] Reaction picker UI (emoji grid)
+- [x] Reaction display on pins (grouped counts)
+- [x] Comment thread UI
+- [ ] Real-time sync for reactions/comments
 
 ### Solo Trip Maps
-- [ ] Map type: solo_trip
-- [ ] Owner permission checks
-- [ ] Partner view-only UI
-- [ ] "I'm here!" quick action
-- [ ] Notification to partner
+- [x] Map type: solo_trip
+- [x] Owner permission checks (server-side ForbiddenError)
+- [x] Partner view-only UI (client-side restrictions)
+- [x] "I'm here!" quick action (geolocation)
+- [x] Solo Trip badge in header
 
 ### Place Search
-- [ ] Nominatim API integration
-- [ ] Search input with debounce
-- [ ] Results dropdown
-- [ ] Select to navigate
-- [ ] Quick pin from search
+- [x] Nominatim API integration
+- [x] Search input with debounce
+- [x] Results dropdown
+- [x] Select to navigate
+- [x] Quick pin from search
 
 ### Themes
-- [ ] Theme configuration
-- [ ] Theme switcher UI
-- [ ] Implement 5 preset themes
-- [ ] Custom color picker
-- [ ] Save to user preferences
-- [ ] Apply theme globally
+- [x] Theme configuration
+- [x] Theme switcher UI
+- [x] Implement 5 preset themes
+- [x] Custom color picker
+- [x] Save to user preferences
+- [x] Apply theme globally
 
 ---
 
 ## Phase 5: Polish
 
 ### Performance
-- [ ] Lazy load images
-- [ ] Pin clustering (react-leaflet-cluster)
-- [ ] Drawing path simplification
+- [x] Lazy load images
+- [x] Pin clustering (react-leaflet-cluster)
+- [x] Drawing path simplification (Douglas-Peucker algorithm)
 - [ ] Bundle analysis and optimization
 - [ ] Code splitting by route
 
 ### UX Improvements
-- [ ] Onboarding tour
-- [ ] Keyboard shortcuts
-- [ ] Better error messages
-- [ ] Improved loading states
-- [ ] Animations and transitions
-- [ ] Mobile responsive design
+- [x] Onboarding tour
+- [x] Keyboard shortcuts
+- [x] Better error messages
+- [x] Improved loading states
+- [x] Animations and transitions
+- [x] Mobile responsive design
 
 ### Additional Features
-- [ ] Pin filtering
-- [ ] Timeline view
-- [ ] Map export
+- [x] Pin filtering (by type, date, creator)
+- [x] Timeline view
+- [x] Map export as image
+- [x] Bulk pin management
+- [x] Map zoom to fit all pins
+- [x] Drag to reposition pins
+- [x] Undo/redo for drawings
 - [ ] Voice notes
 - [ ] Anniversary reminders
 
@@ -420,39 +438,58 @@
 ## Phase 6: Production
 
 ### Security
-- [ ] Helmet.js setup
-- [ ] CORS configuration
-- [ ] Rate limiting audit
-- [ ] Input sanitization
-- [ ] Dependency audit
+- [x] Helmet.js setup
+- [x] CORS configuration
+- [x] Rate limiting audit
+- [x] Input sanitization (zod on all endpoints)
+- [x] SQL injection prevention (parameterized queries)
+- [x] File upload security (multer + sharp + MIME validation)
 
 ### Testing
-- [ ] Server unit tests
-- [ ] Server integration tests
-- [ ] Client component tests
+- [x] Server unit tests (49 tests: utilities, errors, middleware)
+- [x] Client component tests (38 tests: Avatar, Button, cn, pathSimplify)
+- [ ] Server integration tests (API endpoints)
+- [ ] Socket event tests
 - [ ] E2E tests (Playwright)
 
 ### DevOps
-- [ ] Production Dockerfiles
-- [ ] Nginx configuration
-- [ ] SSL setup
+- [x] Production Dockerfiles (multi-stage builds)
+- [x] Nginx configuration (SPA routing, gzip, asset caching)
+- [x] Production docker-compose.prod.yml
+- [x] Structured logging (pino with redaction)
+- [x] Health check endpoints
+- [ ] SSL setup (Let's Encrypt)
 - [ ] Backup scripts
 - [ ] CI/CD pipeline
+- [ ] Monitoring setup
 
 ### Documentation
-- [ ] Complete API docs
-- [ ] Deployment guide
+- [x] API documentation (docs/API.md)
+- [x] Database schema docs (docs/DATABASE.md)
+- [x] Security guide (docs/SECURITY.md)
+- [x] Deployment guide (docs/DEPLOYMENT.md)
+- [x] Config guide (docs/CONFIG.md)
+- [x] Testing guide (docs/TESTING.md)
+- [x] Features spec (docs/FEATURES.md)
 - [ ] User guide
+- [ ] Contributing guide
 
 ---
 
 ## Notes
 
 ### Decisions Made
--
+- Using happy-dom instead of jsdom for client tests (ESM compatibility)
+- Using pino for structured logging with sensitive data redaction
+- Multi-stage Docker builds for optimized production images
+- Douglas-Peucker algorithm for drawing path simplification
 
 ### Blockers
--
+- Redis adapter for Socket.io not yet configured (horizontal scaling)
 
 ### Ideas for Later
--
+- Voice notes on pins
+- Anniversary reminders
+- Share map preview (public link)
+- Service worker for offline caching
+- CI/CD pipeline (GitHub Actions)

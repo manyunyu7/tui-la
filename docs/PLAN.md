@@ -157,30 +157,40 @@
 
 ## Phase 4: Enhanced Features
 
-### 4.1 Reactions & Comments
-- [ ] Reaction data model
-- [ ] Add reaction to pin
-- [ ] Reaction display on pins
-- [ ] Comment data model
-- [ ] Add comment to pin
-- [ ] Comment thread UI
-- [ ] Real-time reaction/comment sync
+### 4.1 Chat System
+- [x] Chat message data model (migration 011)
+- [x] Chat persistence service (create, get with pagination, soft delete)
+- [x] Chat REST API endpoints (GET/POST/DELETE /api/maps/:mapId/chat)
+- [x] Socket.io chat events (chat_message, chat_received, chat_typing, partner_typing)
+- [x] Chat UI component (ChatWindow with message history, typing indicator, auto-scroll)
+- [x] Unread message badge
 
-### 4.2 Solo Trip Maps
-- [ ] Solo map type implementation
-- [ ] Owner-only edit permissions
-- [ ] Partner view-only mode
-- [ ] "I'm here!" quick pin
-- [ ] Partner notification on new pin
+### 4.2 Reactions & Comments
+- [x] Reaction data model (migration 009)
+- [x] Add reaction to pin (POST /api/pins/:pinId/reactions)
+- [x] Remove reaction (DELETE /api/pins/:pinId/reactions/:reactionId)
+- [x] Reaction display on pins (ReactionPicker component with emoji grouping)
+- [x] Comment data model (migration 010)
+- [x] Add comment to pin (POST /api/pins/:pinId/comments)
+- [x] Get comments (GET /api/pins/:pinId/comments)
+- [x] Delete comment (DELETE /api/comments/:commentId)
+- [x] Comment thread UI (CommentThread component)
 
-### 4.3 Search & Places
+### 4.3 Solo Trip Maps
+- [x] Solo map type implementation
+- [x] Owner-only edit permissions (server-side ForbiddenError)
+- [x] Partner view-only mode (client-side UI restrictions)
+- [x] "I'm here!" quick pin (geolocation-based)
+- [x] Solo Trip badge in header
+
+### 4.4 Search & Places
 - [x] Nominatim integration (free geocoding)
 - [x] Search places input
 - [x] Search results dropdown
 - [x] Navigate to place on map
 - [x] Quick add pin from search
 
-### 4.4 Theme Customization
+### 4.5 Theme Customization
 - [x] Theme context
 - [x] Theme selector UI
 - [x] Predefined themes:
@@ -234,24 +244,27 @@
 - [x] File upload security review (multer + sharp + mime validation)
 
 ### 6.2 Testing
-- [ ] Unit tests for utilities
+- [x] Unit tests for utilities (server: helpers, errors - 29 tests)
 - [ ] API endpoint tests
 - [ ] Socket event tests
-- [ ] Component tests
+- [x] Middleware tests (server: auth, validate, errorHandler - 20 tests)
+- [x] Component tests (client: Avatar, Button - 20 tests)
+- [x] Utility tests (client: cn, pathSimplify - 18 tests)
 - [ ] E2E tests (critical flows)
 
 ### 6.3 DevOps
-- [ ] Production Docker images
-- [ ] Nginx configuration
+- [x] Production Docker images (multi-stage builds for server + client)
+- [x] Nginx configuration (SPA routing, gzip, API proxy)
 - [ ] SSL/TLS setup (Let's Encrypt)
 - [ ] Database backup strategy
-- [ ] Logging (structured logs)
+- [x] Logging (structured pino logs with redaction)
 - [x] Health check endpoints
+- [x] Production docker-compose (docker-compose.prod.yml)
 - [ ] Monitoring setup
 
 ### 6.4 Documentation
-- [ ] API documentation
-- [ ] Deployment guide
+- [x] API documentation (docs/API.md)
+- [x] Deployment guide (docs/DEPLOYMENT.md)
 - [ ] User guide
 - [ ] Contributing guide
 
