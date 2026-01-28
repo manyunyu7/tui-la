@@ -1,6 +1,7 @@
 import type { Server, Socket } from 'socket.io'
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
+import { logger } from '../config/logger.js'
 import type { JWTPayload } from '../types/index.js'
 import * as chatService from '../services/chat.js'
 
@@ -28,7 +29,7 @@ export function setupSocketHandlers(io: Server): void {
 
   io.on('connection', (socket: AuthenticatedSocket) => {
     const user = socket.user!
-    console.log(`User connected: ${user.userId}`)
+    logger.info({ userId: user.userId }, 'User connected')
 
     // Join couple room
     if (user.coupleId) {
@@ -48,7 +49,7 @@ export function setupSocketHandlers(io: Server): void {
         email: user.email,
       })
 
-      console.log(`User ${user.userId} joined map ${mapId}`)
+      logger.info({ userId: user.userId, mapId }, 'User joined map')
     })
 
     // Handle leaving a map
@@ -61,7 +62,7 @@ export function setupSocketHandlers(io: Server): void {
         userId: user.userId,
       })
 
-      console.log(`User ${user.userId} left map ${mapId}`)
+      logger.info({ userId: user.userId, mapId }, 'User left map')
     })
 
     // Handle cursor movement
@@ -173,7 +174,7 @@ export function setupSocketHandlers(io: Server): void {
           createdAt: saved.createdAt,
         })
       } catch (error) {
-        console.error('Failed to save chat message:', error)
+        logger.error({ err: error, userId: user.userId }, 'Failed to save chat message')
         socket.emit('chat_error', { message: 'Failed to send message' })
       }
     })
@@ -189,7 +190,7 @@ export function setupSocketHandlers(io: Server): void {
 
     // Handle disconnection
     socket.on('disconnect', () => {
-      console.log(`User disconnected: ${user.userId}`)
+      logger.info({ userId: user.userId }, 'User disconnected')
 
       // Notify all rooms the user was in
       if (user.coupleId) {

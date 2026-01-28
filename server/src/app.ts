@@ -6,6 +6,7 @@ import { Server as SocketServer } from 'socket.io'
 import { env } from './config/env.js'
 import { connectRedis } from './config/redis.js'
 import { pool } from './config/database.js'
+import { logger } from './config/logger.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import authRoutes from './routes/auth.js'
 import coupleRoutes from './routes/couple.js'
@@ -65,24 +66,23 @@ async function start(): Promise<void> {
   try {
     // Test database connection
     await pool.query('SELECT 1')
-    console.log('Database connected')
+    logger.info('Database connected')
 
     // Connect to Redis
     await connectRedis()
 
     httpServer.listen(env.PORT, () => {
-      console.log(`${env.APP_NAME} server running on port ${env.PORT}`)
-      console.log(`Environment: ${env.NODE_ENV}`)
+      logger.info({ port: env.PORT, env: env.NODE_ENV }, `${env.APP_NAME} server running`)
     })
   } catch (error) {
-    console.error('Failed to start server:', error)
+    logger.fatal({ err: error }, 'Failed to start server')
     process.exit(1)
   }
 }
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, shutting down...')
+  logger.info('SIGTERM received, shutting down...')
   httpServer.close()
   await pool.end()
   process.exit(0)

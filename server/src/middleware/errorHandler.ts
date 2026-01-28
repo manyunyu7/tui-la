@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express'
 import { ZodError } from 'zod'
 import { AppError } from '../utils/errors.js'
 import { env } from '../config/env.js'
+import { logger } from '../config/logger.js'
 
 export function errorHandler(
   err: Error,
@@ -9,7 +10,11 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
-  console.error('Error:', err)
+  if (err instanceof AppError && err.statusCode < 500) {
+    logger.warn({ err, statusCode: err.statusCode }, err.message)
+  } else if (!(err instanceof ZodError)) {
+    logger.error({ err }, 'Unhandled error')
+  }
 
   // Handle Zod validation errors
   if (err instanceof ZodError) {

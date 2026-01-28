@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import jwt from 'jsonwebtoken'
-import type { Response, NextFunction } from 'express'
+import type { Response } from 'express'
 import { authenticate, optionalAuth } from './auth.js'
 import type { AuthRequest } from '../types/index.js'
 
