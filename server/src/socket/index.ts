@@ -2,6 +2,7 @@ import type { Server, Socket } from 'socket.io'
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
 import type { JWTPayload } from '../types/index.js'
+import * as chatService from '../services/chat.js'
 
 interface AuthenticatedSocket extends Socket {
   user?: JWTPayload
@@ -141,14 +142,40 @@ export function setupSocketHandlers(io: Server): void {
       })
     })
 
-    // Handle chat message
-    socket.on('chat_message', (data: { mapId: string; message: string }) => {
-      const room = `map:${data.mapId}`
-      socket.to(room).emit('chat_received', {
-        userId: user.userId,
-        message: data.message,
-        timestamp: new Date().toISOString(),
-      })
+    // Handle chat message - persist to database and broadcast
+    socket.on('chat_message', async (data: { mapId: string; message: string }) => {
+      if (!user.coupleId) return
+
+      try {
+        const saved = await chatService.createMessage(
+          {
+            mapId: data.mapId,
+            userId: user.userId,
+            content: data.message,
+          },
+          user.coupleId
+        )
+
+        const room = `map:${data.mapId}`
+        socket.to(room).emit('chat_received', {
+          id: saved.id,
+          userId: user.userId,
+          displayName: saved.displayName,
+          content: saved.content,
+          messageType: saved.messageType,
+          createdAt: saved.createdAt,
+        })
+
+        // Also emit back to sender with the saved message id
+        socket.emit('chat_saved', {
+          id: saved.id,
+          content: saved.content,
+          createdAt: saved.createdAt,
+        })
+      } catch (error) {
+        console.error('Failed to save chat message:', error)
+        socket.emit('chat_error', { message: 'Failed to send message' })
+      }
     })
 
     // Handle typing indicator

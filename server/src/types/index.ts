@@ -152,6 +152,18 @@ export interface Comment {
   deletedAt: Date | null
 }
 
+// Chat message types
+export interface ChatMessage {
+  id: string
+  mapId: string
+  userId: string
+  content: string
+  messageType: string
+  metadata: Record<string, unknown>
+  createdAt: Date
+  deletedAt: Date | null
+}
+
 // Refresh token types
 export interface RefreshToken {
   id: string

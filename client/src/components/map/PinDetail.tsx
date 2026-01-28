@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import { Button, Lightbox } from '@/components/ui'
 import { PIN_TYPES } from '@/config/constants'
+import { ReactionPicker } from './ReactionPicker'
+import { CommentThread } from './CommentThread'
 import type { Pin } from '@/types'
 
 interface PinDetailProps {
   pin: Pin
+  userId?: string
   onEdit?: () => void
   onDelete?: () => void
   onClose?: () => void
 }
 
-export function PinDetail({ pin, onEdit, onDelete, onClose }: PinDetailProps) {
+export function PinDetail({ pin, userId, onEdit, onDelete, onClose }: PinDetailProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
 
@@ -122,6 +125,16 @@ export function PinDetail({ pin, onEdit, onDelete, onClose }: PinDetailProps) {
           )}
         </div>
       )}
+
+      {/* Reactions */}
+      <div className="mb-4">
+        <ReactionPicker pinId={pin.id} userId={userId} />
+      </div>
+
+      {/* Comments */}
+      <div className="mb-4">
+        <CommentThread pinId={pin.id} userId={userId} />
+      </div>
 
       {/* Actions */}
       <div className="flex gap-2 pt-2 border-t border-neutral-100">

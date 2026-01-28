@@ -1,10 +1,19 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
-import type { Pin } from '@/types'
+import type { Pin, ChatMessage } from '@/types'
 
 interface Point {
   x: number
   y: number
+}
+
+interface ChatReceivedData {
+  id: string
+  userId: string
+  displayName: string
+  content: string
+  messageType: string
+  createdAt: string
 }
 
 interface UseSocketOptions {
@@ -20,6 +29,8 @@ interface UseSocketOptions {
   onStrokeStarted?: (data: { userId: string; strokeId: string; color: string; width: number }) => void
   onStrokeUpdated?: (data: { userId: string; strokeId: string; points: Point[] }) => void
   onStrokeEnded?: (data: { userId: string; strokeId: string }) => void
+  onChatReceived?: (data: ChatReceivedData) => void
+  onPartnerTyping?: (data: { userId: string; isTyping: boolean }) => void
 }
 
 export function useSocket({
@@ -35,6 +46,8 @@ export function useSocket({
   onStrokeStarted,
   onStrokeUpdated,
   onStrokeEnded,
+  onChatReceived,
+  onPartnerTyping,
 }: UseSocketOptions) {
   const socketRef = useRef<Socket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
@@ -68,13 +81,15 @@ export function useSocket({
     socket.on('stroke_started', onStrokeStarted || (() => {}))
     socket.on('stroke_updated', onStrokeUpdated || (() => {}))
     socket.on('stroke_ended', onStrokeEnded || (() => {}))
+    socket.on('chat_received', onChatReceived || (() => {}))
+    socket.on('partner_typing', onPartnerTyping || (() => {}))
 
     return () => {
       socket.emit('leave_map', mapId)
       socket.disconnect()
       socketRef.current = null
     }
-  }, [accessToken, mapId, onPinCreated, onPinUpdated, onPinDeleted, onPinMoved, onPartnerCursor, onPartnerJoined, onPartnerLeft, onStrokeStarted, onStrokeUpdated, onStrokeEnded])
+  }, [accessToken, mapId, onPinCreated, onPinUpdated, onPinDeleted, onPinMoved, onPartnerCursor, onPartnerJoined, onPartnerLeft, onStrokeStarted, onStrokeUpdated, onStrokeEnded, onChatReceived, onPartnerTyping])
 
   // Debounced cursor move - throttle to max 10 updates per second
   const lastCursorEmitRef = useRef<number>(0)
@@ -140,6 +155,14 @@ export function useSocket({
     socketRef.current?.emit('stroke_end', { mapId, strokeId })
   }, [mapId])
 
+  const emitChatMessage = useCallback((message: string) => {
+    socketRef.current?.emit('chat_message', { mapId, message })
+  }, [mapId])
+
+  const emitChatTyping = useCallback((isTyping: boolean) => {
+    socketRef.current?.emit('chat_typing', { mapId, isTyping })
+  }, [mapId])
+
   return {
     isConnected,
     emitCursorMove,
@@ -150,5 +173,7 @@ export function useSocket({
     emitStrokeStart,
     emitStrokeUpdate,
     emitStrokeEnd,
+    emitChatMessage,
+    emitChatTyping,
   }
 }

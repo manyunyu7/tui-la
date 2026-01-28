@@ -163,6 +163,30 @@ export interface Comment {
   updatedAt: string
 }
 
+// Chat message types
+export interface ChatMessage {
+  id: string
+  mapId: string
+  userId: string
+  content: string
+  messageType: string
+  metadata: Record<string, unknown>
+  displayName: string
+  avatarPath?: string
+  createdAt: string
+}
+
+// Reaction with user info
+export interface ReactionWithUser extends Reaction {
+  displayName: string
+}
+
+// Comment with user info
+export interface CommentWithUser extends Comment {
+  displayName: string
+  avatarPath?: string
+}
+
 // API Response types
 export interface ApiResponse<T> {
   data: T

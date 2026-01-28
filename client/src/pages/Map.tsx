@@ -3,6 +3,7 @@ import { useMapExport } from '@/hooks/useMapExport'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { MapView, MapControls, PinMarker, PinEditor, LocateControl, PartnerCursor, DrawingCanvas, DrawingToolbar, PlaceSearch, PinFilters, FilterButton, applyPinFilter, type PinFilter, type GeoStroke, type DrawingCanvasRef, type DrawingTool, Timeline, TimelineButton, FlyTo, FitBounds, PinClusterGroup, BulkPinManager, BulkSelectButton } from '@/components/map'
+import { ChatWindow } from '@/components/chat'
 import { Button, Modal, Onboarding, useOnboarding } from '@/components/ui'
 import { NoPinsEmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
@@ -10,7 +11,7 @@ import { usePins } from '@/hooks/usePins'
 import { useSocket } from '@/hooks/useSocket'
 import { useKeyboardShortcuts, MAP_SHORTCUTS } from '@/hooks/useKeyboardShortcuts'
 import { api } from '@/services/api'
-import type { Pin, MapData } from '@/types'
+import type { Pin, MapData, ChatMessage } from '@/types'
 import type { PinFormData } from '@/components/map/PinEditor'
 
 interface Stroke {
@@ -160,6 +161,12 @@ export function Map() {
   const [flyToTarget, setFlyToTarget] = useState<{ lat: number; lng: number } | null>(null)
   const [fitBoundsTrigger, setFitBoundsTrigger] = useState(0)
 
+  // Chat state
+  const [isChatOpen, setIsChatOpen] = useState(false)
+  const [incomingChatMessage, setIncomingChatMessage] = useState<ChatMessage | null>(null)
+  const [isPartnerChatTyping, setIsPartnerChatTyping] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+
   // Bulk selection state
   const [isBulkSelectMode, setIsBulkSelectMode] = useState(false)
   const [selectedPins, setSelectedPins] = useState<string[]>([])
@@ -197,6 +204,8 @@ export function Map() {
     emitStrokeStart,
     emitStrokeUpdate,
     emitStrokeEnd,
+    emitChatMessage,
+    emitChatTyping,
   } = useSocket({
     mapId: mapId!,
     accessToken,
@@ -249,6 +258,29 @@ export function Map() {
     onStrokeEnded: useCallback((data: { userId: string; strokeId: string }) => {
       if (data.userId !== user?.id) {
         // Keep the stroke visible
+      }
+    }, [user?.id]),
+    onChatReceived: useCallback((data: { id: string; userId: string; displayName: string; content: string; messageType: string; createdAt: string }) => {
+      if (data.userId !== user?.id) {
+        const message: ChatMessage = {
+          id: data.id,
+          mapId: mapId!,
+          userId: data.userId,
+          content: data.content,
+          messageType: data.messageType,
+          metadata: {},
+          displayName: data.displayName,
+          createdAt: data.createdAt,
+        }
+        setIncomingChatMessage(message)
+        if (!isChatOpen) {
+          setUnreadCount(prev => prev + 1)
+        }
+      }
+    }, [user?.id, mapId, isChatOpen]),
+    onPartnerTyping: useCallback((data: { userId: string; isTyping: boolean }) => {
+      if (data.userId !== user?.id) {
+        setIsPartnerChatTyping(data.isTyping)
       }
     }, [user?.id]),
   })
@@ -564,6 +596,21 @@ export function Map() {
             </div>
           </div>
         </div>
+
+        {/* Chat toggle button */}
+        <button
+          onClick={() => { setIsChatOpen(prev => !prev); setUnreadCount(0) }}
+          className="relative p-2 hover:bg-neutral-100 rounded-xl transition-colors"
+        >
+          <svg className="w-6 h-6 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
       </header>
 
       {/* Map */}
@@ -699,6 +746,17 @@ export function Map() {
           onBulkTypeChange={handleBulkTypeChange}
           onClose={handleBulkSelectToggle}
           isOpen={isBulkSelectMode}
+        />
+
+        {/* Chat window */}
+        <ChatWindow
+          mapId={mapId!}
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          onSendMessage={emitChatMessage}
+          incomingMessage={incomingChatMessage}
+          isPartnerTyping={isPartnerChatTyping}
+          onTyping={emitChatTyping}
         />
 
         {/* Empty state overlay */}
