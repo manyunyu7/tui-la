@@ -173,7 +173,7 @@ router.put(
         return
       }
 
-      const pin = await pinsService.updatePin(req.params.pinId, req.user.coupleId, req.body)
+      const pin = await pinsService.updatePin(req.params.pinId, req.user.coupleId, req.body, req.user.userId)
       res.json({ data: pin })
     } catch (error) {
       next(error)
@@ -194,7 +194,7 @@ router.delete(
         return
       }
 
-      await pinsService.deletePin(req.params.pinId, req.user.coupleId)
+      await pinsService.deletePin(req.params.pinId, req.user.coupleId, req.user.userId)
       res.json({ data: { message: 'Pin deleted successfully' } })
     } catch (error) {
       next(error)

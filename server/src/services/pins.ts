@@ -133,7 +133,12 @@ export async function createPin(
   coupleId: string
 ): Promise<PinWithMedia> {
   // Verify map access
-  await mapsService.getMapById(input.mapId, coupleId)
+  const map = await mapsService.getMapById(input.mapId, coupleId)
+
+  // Solo trip maps: only owner can create pins
+  if (map.type === 'solo_trip' && map.ownerId && map.ownerId !== input.createdBy) {
+    throw new ForbiddenError('Only the map owner can add pins to a solo trip map')
+  }
 
   const {
     mapId,
@@ -200,10 +205,23 @@ export async function createPin(
 export async function updatePin(
   pinId: string,
   coupleId: string,
-  input: UpdatePinInput
+  input: UpdatePinInput,
+  userId?: string
 ): Promise<PinWithMedia> {
   // Verify access
-  await getPinById(pinId, coupleId)
+  const pin = await getPinById(pinId, coupleId)
+
+  // Check solo trip ownership if userId provided
+  if (userId) {
+    const mapResult = await query<{ type: string; ownerId: string | null }>(
+      'SELECT type, owner_id FROM maps WHERE id = $1',
+      [pin.mapId]
+    )
+    const map = mapResult.rows[0]
+    if (map && map.type === 'solo_trip' && map.ownerId && map.ownerId !== userId) {
+      throw new ForbiddenError('Only the map owner can edit pins on a solo trip map')
+    }
+  }
 
   const updates: string[] = []
   const values: unknown[] = []
@@ -305,9 +323,21 @@ export async function updatePin(
   return getPinById(pinId, coupleId)
 }
 
-export async function deletePin(pinId: string, coupleId: string): Promise<void> {
+export async function deletePin(pinId: string, coupleId: string, userId?: string): Promise<void> {
   // Verify access
-  await getPinById(pinId, coupleId)
+  const pin = await getPinById(pinId, coupleId)
+
+  // Check solo trip ownership if userId provided
+  if (userId) {
+    const mapResult = await query<{ type: string; ownerId: string | null }>(
+      'SELECT type, owner_id FROM maps WHERE id = $1',
+      [pin.mapId]
+    )
+    const map = mapResult.rows[0]
+    if (map && map.type === 'solo_trip' && map.ownerId && map.ownerId !== userId) {
+      throw new ForbiddenError('Only the map owner can delete pins on a solo trip map')
+    }
+  }
 
   await query(
     'UPDATE pins SET deleted_at = NOW() WHERE id = $1',

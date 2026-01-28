@@ -317,8 +317,12 @@ export function Map() {
 
   const handleMapClick = useCallback((lat: number, lng: number) => {
     if (isDrawingMode) return
+    if (mapData?.type === 'solo_trip' && mapData?.ownerId !== user?.id) {
+      toast.info('Only the map owner can add pins to a solo trip map')
+      return
+    }
     setClickPosition({ lat, lng })
-  }, [isDrawingMode])
+  }, [isDrawingMode, mapData, user?.id, toast])
 
   const handleDrawingToggle = useCallback(async () => {
     if (isDrawingMode) {
@@ -347,6 +351,11 @@ export function Map() {
     }
     setIsDrawingMode(prev => !prev)
   }, [isDrawingMode, mapId, toast])
+
+  const updateUndoRedoState = useCallback(() => {
+    setCanUndo(drawingCanvasRef.current?.canUndo() ?? false)
+    setCanRedo(drawingCanvasRef.current?.canRedo() ?? false)
+  }, [])
 
   const handleStrokeStart = useCallback((strokeId: string, color: string, width: number) => {
     emitStrokeStart(strokeId, color, width)
@@ -379,11 +388,6 @@ export function Map() {
       }
     }
   }, [mapId, savedDrawings.length, toast])
-
-  const updateUndoRedoState = useCallback(() => {
-    setCanUndo(drawingCanvasRef.current?.canUndo() ?? false)
-    setCanRedo(drawingCanvasRef.current?.canRedo() ?? false)
-  }, [])
 
   const handleUndo = useCallback(() => {
     drawingCanvasRef.current?.undo()
@@ -513,6 +517,41 @@ export function Map() {
     })
   }, [])
 
+  // "I'm here!" quick pin for solo trip maps
+  const handleImHere = useCallback(async () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation not supported')
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const newPin = await createPin(
+            { lat: position.coords.latitude, lng: position.coords.longitude },
+            {
+              title: "I'm here!",
+              pinType: 'trip',
+              icon: '📍',
+              color: '#E11D48',
+            }
+          )
+          emitPinCreate(newPin)
+          setFlyToTarget({ lat: position.coords.latitude, lng: position.coords.longitude })
+          toast.success("Pin dropped at your location!")
+        } catch {
+          toast.error('Failed to create pin')
+        }
+      },
+      () => toast.error('Unable to get your location'),
+      { enableHighAccuracy: true }
+    )
+  }, [createPin, emitPinCreate, toast])
+
+  const isSoloTripMap = mapData?.type === 'solo_trip'
+  const isMapOwner = mapData?.ownerId === user?.id
+  const canEditMap = !isSoloTripMap || isMapOwner
+
   // Keyboard shortcuts
   useKeyboardShortcuts({
     shortcuts: [
@@ -584,6 +623,12 @@ export function Map() {
             />
             <div className="flex items-center gap-2 text-xs text-neutral-500 mt-0.5">
               <span>{pins.length} pins</span>
+              {isSoloTripMap && (
+                <>
+                  <span className="w-1 h-1 bg-neutral-300 rounded-full" />
+                  <span className="text-primary-500 font-medium">Solo Trip</span>
+                </>
+              )}
               {isConnected && (
                 <>
                   <span className="w-1 h-1 bg-neutral-300 rounded-full" />
@@ -717,6 +762,15 @@ export function Map() {
               isActive={isBulkSelectMode}
               selectedCount={selectedPins.length}
             />
+          )}
+          {isSoloTripMap && isMapOwner && (
+            <button
+              onClick={handleImHere}
+              className="flex items-center gap-2 bg-primary-500 text-white px-4 py-2 rounded-xl shadow-lg border-b-4 border-primary-700 active:border-b-0 active:translate-y-1 transition-all font-bold text-sm hover:bg-primary-400"
+            >
+              <span>📍</span>
+              I'm here!
+            </button>
           )}
         </div>
 
